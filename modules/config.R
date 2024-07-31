@@ -14,7 +14,7 @@ vars.cat <- unique(variables.lu$category)
 dtype.choice <- c("Total" = "total",
                   "Delta" = "delta",
                   "Percent delta" = "percent_delta",
-                  "5y moving average" = "moving average"
+                  "5y moving average" = "moving_average"
                 )
 # xtab sublist: dimensions
 #dtype.choice.xtab <- dtype.choice[c(1:2, 5, 4, 7)]

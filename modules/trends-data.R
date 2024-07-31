@@ -7,32 +7,29 @@ trends_data_ui <- function(id) {
   
 }
 
-trends_data_server <- function(id, go, trend_var, geography, subgeography = NULL) {
+get_delta <- function(dat){
+  dat[, value := c(NA, diff(value)), by = c("Source", "category", "variable")]  
+}
+
+get_percent_delta <- function(dat){
+  dat[, value := c(NA, 100*(exp(diff(log(value)))-1)), by = c("Source", "category", "variable")]  
+}
+
+get_moving_average <- function(dat){
+  dat[, value := (value - shift(value, n = 5))/5, by = c("Source", "category", "variable")]  
+}
+
+
+
+trends_data_server <- function(id, go, trend_var, geography, visoption) {
   
   moduleServer(id, function(input, output, session) { 
     ns <- session$ns
     
-    varyears <- eventReactive(go, {
-      # identify which years the variable is available
-      
-      v <- variables.lu[variable %in% trend_var, ]
-      y <- unique(v$survey_year)
-      y <- as.character(y[which(y != 2017)]) # 2019 will represent 2017_2019
-      str_replace(y, "2019", "2017_2019")
-    })
-    
     alias <- eventReactive(go, {
       # return the variable's alias (all available years)
-      alias <- variables.lu[variable %in% trend_var(), .(variable_name)]
+      alias <- variables.lu[variable %in% trend_var, .(variable_name)]
       unique(alias$variable_name)
-    })
-    
-    values <- eventReactive(go, {
-      # return variable's values (all available years)
-      
-      v <- values.lu[variable %in% trend_var, ][order(value_order)] # return a dt
-      unique(v[, .SD, .SDcols = !c('value_id', 'survey_year')])
-      # used in stabTableType, (xvals) for table display
     })
     
     tabledata <- eventReactive(go, {
@@ -64,7 +61,12 @@ trends_data_server <- function(id, go, trend_var, geography, subgeography = NULL
       
       # filter for home county when county is selected
         data <- data[Region == geography, .(value = sum(value)), by = .(Source, category, variable, year)]
-
+        data <- switch(visoption(),
+                       'total' = data,
+                       'delta' = get_delta(data),
+                       "percent_delta" = get_percent_delta(data),
+                       "moving_average" = get_moving_average(data)
+                      )
       return(data)
     })
     

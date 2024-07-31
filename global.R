@@ -20,6 +20,7 @@ alldata.long <- melt(alldata[, c("Source", "category", "variable", "Region", "Ag
                             as.character(1980:2060)), with = FALSE],
                 id.vars = c("Source", "category", "variable", "Region", "Age", "Race", "Units"),
                 variable.name = "year", variable.factor = FALSE)
+alldata.long <- alldata.long[(startsWith(Age, "All Ages") | is.na(Age)) & (startsWith(Race, "All Races") | is.na(Race))]
 alldata.long[, year := as.integer(year)]
 alldata.long[Region %in% c("All Regions", "Region Total"), Region := "Region"]
 for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))

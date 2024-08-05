@@ -25,6 +25,7 @@ alldata.long[, year := as.integer(year)]
 alldata.long[Region %in% c("All Regions", "Region Total"), Region := "Region"]
 for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))
     alldata.long[startsWith(Region, cnty), Region := cnty] 
+alldata.long <- alldata.long[!is.na(value)]
 
 #source('modules/functions.R') # read functions file first
 

@@ -18,7 +18,7 @@ trends_tab_ui <- function(id) {
                  #conditionalPanel(paste0("input['", ns("tabset"), "'] == 'v'"),
                                   div(style = 'margin: 3rem 0',
                                       radioButtons(ns('visopt'),
-                                                   label = 'Visual Options',
+                                                   label = 'Measure',
                                                    choices = dtype.choice.stab.vis
                                       ))
           ), # end column
@@ -29,11 +29,14 @@ trends_tab_ui <- function(id) {
                              #         value = 't',
                              #         trends_table_ui(ns('table'))
                              #),
-                             tabPanel('Visual',
-                                      value = 'v',
+                             tabPanel('Region',
+                                      value = 'Region',
                                       trends_plot_ui(ns('plot'))
-                                      
-                             )
+                                      )#,
+                             #tabPanel('King',
+                             #         value = 'King',
+                             #          trends_plot_ui(ns('plot'))         
+                             #        )
                              
                  ) # end tabsetPanel
                  
@@ -52,22 +55,20 @@ trends_tab_server <- function(id) {
     
     vals <- reactiveValues(var = NULL)
     
-    observeEvent(input$`trends-go`, {
-      vals$var <- input$`trends-variable`
-    })
+    #observeEvent(input$`trends-go`, {
+    #  vals$var <- input$`trends-variable`
+    #})
     
     trends_widgets_server('trends')
     
-    d <- eventReactive(input$`trends-go`, {
-      trends_data_server('trendsData', 
-                         go = input$`trends-go`, 
-                         trend_var = input$`trends-variable`,
-                         geography = input$`trends-geography`,
-                         #subgeography = input$`trends-subgeography`
+    #d <- eventReactive(input$`trends-go`, {
+    d <- reactive({trends_data_server('trendsData',
+                         #go = input$`trends-go`,
+                         trend_var = reactive(input$`trends-variable`),
+                         geography = reactive(input$tabset),
                          visoption = reactive(input$visopt)
                          )
-    })
-    
+                })
     # observeEvent(input$`trends-go`, {
     #   trends_table_server('table', 
     #                       go = input$`trends-go`, 
@@ -77,16 +78,16 @@ trends_tab_server <- function(id) {
     #                       subgeography = input$`trends-subgeography`
     #                       )
     # })
-    
+
     trends_plot_server('plot',
-                       go = input$`trends-go`,
+                       #go = input$`trends-go`,
                        trendtable= reactive(d()$tablevis),
                        trend_var = reactive(input$`trends-variable`),
                        alias = reactive(d()$alias),
-                       geography = reactive(input$`trends-geography`),
-                       #subgeography = reactive(input$`trends-subgeography`),
+                       geography = reactive(input$tabset),
                        visoption = reactive(input$visopt),
-                       valsvar = reactive(vals$var))
+                       valsvar = reactive(input$`trends-variable`)
+                       )
     
   }) # end moduleServer
   

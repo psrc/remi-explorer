@@ -10,7 +10,9 @@ trends_plot_ui <- function(id) {
   
 }
 
-trends_plot_server <- function(id, go, trendtable, trend_var, alias, geography, subgeography = NULL, visoption, valsvar) {
+
+trends_plot_server <- function(id, trendtable, trend_var, alias, geography, subgeography = NULL, visoption, valsvar
+                               ) {
   
   moduleServer(id, function(input, output, session) { 
     ns <- session$ns
@@ -27,25 +29,33 @@ trends_plot_server <- function(id, go, trendtable, trend_var, alias, geography, 
       )
     })
     
-    clean_table <- reactive({
-      
-      trendtable()
+    get_table <- reactive({
+      #trendtable()
+      dat <- alldata.long[variable %in% trend_var()][order(year)]
+      data <- dat[Region == if(is.null(geography())) "Region" else geography(), 
+                  .(value = sum(value)), by = .(Source, category, variable, year)]
+      if(nrow(data) == 0) browser()
+      data <- switch(visoption(),
+                     'total' = data,
+                     'delta' = get_delta(data),
+                     "percent_delta" = get_percent_delta(data),
+                     "moving_average" = get_moving_average(data)
+      )
+      data
     })
 
     text <- reactive({
       desc <- switch(visoption(),
-                     'total' = 'Total',
-                     'delta' = 'Delta',
-                     "percent_delta" = 'Percent Delta',
+                     'total' = 'Counts',
+                     'delta' = 'Annual Change',
+                     "percent_delta" = 'Percent Annual Change',
                      "moving_average" = '5y moving average')
       alias <- variables.lu[variable %in% trend_var(), .(variable_name)]
       title <- paste(desc, 'of', unique(alias$variable_name))
-
-      #x <- isolate(subgeography())
-      x <- NULL
-      y <- isolate(geography())
       
-      #if(y %in% c('Region', 'Kitsap', 'Snohomish')) x <- NULL
+      x <- NULL
+      y <- geography()
+      if(is.null(y)) y <- "Region"
 
         if(y == 'Region') g <- 'Regional'
         else {
@@ -58,24 +68,11 @@ trends_plot_server <- function(id, go, trendtable, trend_var, alias, geography, 
       return(list(title = title, subtitle = subtitle))
     })
     
+    
     output$plot <- renderPlotly({
-        dat <- clean_table()
-        #dat[, year := as.character(year)]
-        #browser()
-        #echart_line_chart(dat, x = "year", y = "value",
-        #                  est = "number", fill = "Source", title = text()$title)
+        dat <- get_table()
         interactive_line_chart(dat, x = "year", y = "value",
                           est = "number", fill = "Source", title = text()$title)
-        
-      # static_column_chart(t = clean_table(),
-      #                     x = valsvar(),
-      #                     #y = settings()$p,
-      #                     #moe = settings()$m,
-      #                     #est = settings()$e,
-      #                     #fill = 'survey',
-      #                     title = text()$title,
-      #                     subtitle = text()$subtitle,
-      #                     source = 'REMI')
     })
     
     

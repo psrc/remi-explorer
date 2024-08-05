@@ -15,7 +15,7 @@ navbarPage(
                             padding-bottom:0 !important;
                             height: 75px;
                             }
-                           .navbar {min-height:25px !important;}'))
+                           .navbar {min-height25px !important;}'))
   ),
   
   windowTitle = "PSRC REMI Explorer", 

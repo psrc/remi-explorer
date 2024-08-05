@@ -9,16 +9,16 @@ trends_widgets_ui <- function(id) {
     selectInput(ns('category'),
                 label = 'Category',
                 choices = vars.cat, # list all categories available from variables table (regardless of survey)
-    ),
-    uiOutput(ns('var')), 
+                ),
+    uiOutput(ns('var'))#, 
     #uiOutput(ns('icon')),
-    selectInput(ns('geography'),
-                label = 'Geography',
-                choices = c('Region', 'Nation', 'King', 'Kitsap', 'Pierce', 'Snohomish')),
+    #selectInput(ns('geography'),
+    #            label = 'Geography',
+    #            choices = c('Region', 'Nation', 'King', 'Kitsap', 'Pierce', 'Snohomish')),
     #uiOutput(ns('subgeog')),
     
-    actionButton(ns('go'),
-                 label = 'Enter')
+    #actionButton(ns('go'),
+    #             label = 'Enter')
   )
   
 }
@@ -41,7 +41,7 @@ trends_widgets_server <- function(id) {
       selectInput(ns('variable'),
                   label = 'Variable',
                   choices = variables(),
-                  selected = variables()[2])
+                  selected = variables()[1])
      )
     })
     

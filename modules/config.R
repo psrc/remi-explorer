@@ -11,9 +11,9 @@ variables.lu <- variables.lu[category != "Population" | variable == "Total Popul
 vars.cat <- unique(variables.lu$category)
 
 # master list
-dtype.choice <- c("Total" = "total",
-                  "Delta" = "delta",
-                  "Percent delta" = "percent_delta",
+dtype.choice <- c("Counts" = "total",
+                  "Annual Change" = "delta",
+                  "Percent Annual Change" = "percent_delta",
                   "5y moving average" = "moving_average"
                 )
 # xtab sublist: dimensions

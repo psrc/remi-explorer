@@ -3,7 +3,6 @@ library(psrcplot)
 library(plotly)
 library(bs4Dash)
 library(data.table)
-#library(tidyverse)
 library(DT)
 library(here)
 library(shinycssloaders)
@@ -26,10 +25,31 @@ alldata.long[Region %in% c("All Regions", "Region Total"), Region := "Region"]
 for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))
     alldata.long[startsWith(Region, cnty), Region := cnty] 
 alldata.long <- alldata.long[!is.na(value)]
+alldata.long[Source == "LUV-it", Source := "LUVit"]
+sources <- unique(alldata.long[, Source])
+ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI")])), "OFM 2022", "LUVit")
+alldata.long[, Source := factor(Source, levels = ordered.sources)]
 
-#source('modules/functions.R') # read functions file first
+variables.lu <- unique(alldata[category %in%  c("Population", "Employment"), 
+                               .(category, variable, variable_name = `variable`)])
+variables.lu <- variables.lu[category != "Population" | variable == "Total Population"]
 
-# run all files in the modules sub-directory
-module_files <- list.files('modules', full.names = TRUE)
-sapply(module_files, source)
+vars.cat <- unique(variables.lu$category)
+
+# master list
+dtype.choice <- c("Counts" = "total",
+                  "Annual Change" = "delta",
+                  "Percent Annual Change" = "percent_delta",
+                  "5y moving average" = "moving_average"
+)
+
+# photo list
+psrc_photos <- c('bellevuetransitcenter.jpg',
+                 'canyon_road.png',
+                 'linkbeaconhillstn.jpg',
+                 'mtrainierparadisehikers.jpeg',
+                 'redmond-housing_0.jpg',
+                 'st_northgate_trim.png',
+                 'street-intersection.jpeg',
+                 'transitorienteddevelopment.jpeg')
 

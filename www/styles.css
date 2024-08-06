@@ -51,16 +51,23 @@ i {
 }
 
 
-.jumbotron.bg-success{
+/*.jumbotron.bg-success{
   background-color: #005753;
   border-radius: 0px;
+  padding: 1%;
 }
+*/
 
 .jumbotron.bg-info{
   background-color: #4A0048;
-  padding-top: 2rem;
-  padding-bottom: 2rem;
-  border-radius: 0px;
+}
+
+
+.jumbotron{
+  background-color: #005753;
+  padding: 0.5%;
+  padding-top: 0.5%;
+  padding-bottom: 0.5%;
 }
 
 /*

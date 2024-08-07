@@ -70,7 +70,7 @@ navbarPage(
                                              value = 'Region',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot'),
+                                                 plotlyOutput('plot_region'),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),

@@ -14,14 +14,14 @@ function(input, output, session) {
   
   get_moving_average <- function(dat){
     dat[, value := (value - shift(value, n = 5))/5, by = c("Source", "category", "variable")]
-    dat[!startsWith(Source, "LUV")]
+    #dat[!startsWith(Source, "LUV")]
   }
   
   
   variables <- reactive({
     # variable and alias list
     # vars.subset is read in global.R
-    t <- variables.lu[category %in% input$category, ]#[variable %in% vars.subset$variable]
+    t <- variables.lu[category %in% input$category, ]
     v.raw <- as.list(unique(t$variable))
     v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
   })
@@ -78,16 +78,15 @@ function(input, output, session) {
       return(list(title = title, subtitle = subtitle))
     })
     
-    plot_trends <- function(data, title){
+    plot_trends <- function(data, title, line_width = 1, point_size = 1.5){
       if(is.null(data)) return(NULL)
-      interactive_line_chart(data, x = "year", y = "value",
-                             est = "number", fill = "Source", title = title)
+      #interactive_line_chart(data, x = "year", y = "value", est = "number", fill = "Source", title = title)
+      g <- static_line_chart(data, x = "year", y = "value", est = "number", fill = "Source", lwidth = line_width) + 
+        scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + geom_point(size = point_size, aes(color = Source))
+      make_interactive(g, title = title)
     }
-    output$plot <- renderPlotly({
-      #print("render")
-      #print(c(input$tabset, input$category, input$variable, input$visopt))
+    output$plot_region <- renderPlotly({
       plot_trends(get_table(), text()$title)
-
     })
     
     output$plot_king <- renderPlotly({
@@ -111,15 +110,19 @@ function(input, output, session) {
     })
     
     output$plot_4counties <- renderPlotly({
-      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource), "King")
-      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource), "Kitsap")
-      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource), "Pierce")
-      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource), "Snohomish")
+      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource), 
+                        "King", line_width = 0.3, point_size = 0.5)
+      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource), 
+                        "Kitsap", line_width = 0.3, point_size = 0.5)
+      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource), 
+                        "Pierce", line_width = 0.3, point_size = 0.5)
+      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource), 
+                        "Snohomish", line_width = 0.3, point_size = 0.5)
       subplot(f1, 
               style(f2, showlegend = FALSE), 
               style(f3, showlegend = FALSE),
               style(f4, showlegend = FALSE),
-              nrows = 2, shareX = TRUE, margin = 0.07) # , widths = c(0.4, 0.4), heights = c(0.4, 0.4), 
+              nrows = 2, shareX = TRUE, margin = 0.07)
     })
     
     output$afooter <- renderUI({

@@ -48,6 +48,10 @@ function(input, output, session) {
                    "percent_delta" = get_percent_delta(data),
                    "moving_average" = get_moving_average(data)
                   )
+    # add tooltip
+    data$tooltip <- paste0(data$Source, ": ", 
+                           prettyNum(formattable::digits(round(data$value, 0), digits=0), 
+                                     big.mark = ","), " (", data$year, ")")
     data
   }
     get_table <- reactive({
@@ -78,11 +82,17 @@ function(input, output, session) {
       return(list(title = title, subtitle = subtitle))
     })
     
-    plot_trends <- function(data, title, line_width = 1, point_size = 1.5){
+    plot_trends <- function(data, title, line_width = 1, point_size = 1.5, breaks.by = 5){
       if(is.null(data)) return(NULL)
+      minx <- all.xvalues[cut(min(data$year), all.xvalues, labels = FALSE, include.lowest = TRUE, right = FALSE)]
       #interactive_line_chart(data, x = "year", y = "value", est = "number", fill = "Source", title = title)
-      g <- static_line_chart(data, x = "year", y = "value", est = "number", fill = "Source", lwidth = line_width) + 
-        scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + geom_point(size = point_size, aes(color = Source))
+      g <- static_line_chart(data, x = "year", y = "value", est = "number", fill = "Source", lwidth = line_width,
+                             text = "tooltip", breaks = seq(minx, max(data$year), by = breaks.by)
+                             ) + 
+        scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + 
+        #scale_x_continuous(breaks = seq(minx, max(data$year), by = breaks.by)) +
+        geom_point(size = point_size, aes(color = Source))
+        
       make_interactive(g, title = title)
     }
     output$plot_region <- renderPlotly({
@@ -111,13 +121,13 @@ function(input, output, session) {
     
     output$plot_4counties <- renderPlotly({
       f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource), 
-                        "King", line_width = 0.3, point_size = 0.5)
+                        "King", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource), 
-                        "Kitsap", line_width = 0.3, point_size = 0.5)
+                        "Kitsap", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource), 
-                        "Pierce", line_width = 0.3, point_size = 0.5)
+                        "Pierce", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource), 
-                        "Snohomish", line_width = 0.3, point_size = 0.5)
+                        "Snohomish", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       subplot(f1, 
               style(f2, showlegend = FALSE), 
               style(f3, showlegend = FALSE),

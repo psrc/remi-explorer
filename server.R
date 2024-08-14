@@ -30,7 +30,7 @@ function(input, output, session) {
   geography_pyr <- reactive({input$tabset_pyr})
   
   output$var <- renderUI({
-    div(style = "width: 90%; float:left;",
+    div(style = "width: 100%; float:left;",
         selectInput('variable',
                     label = 'Variable',
                     choices = variables(),

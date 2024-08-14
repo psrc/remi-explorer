@@ -55,8 +55,15 @@ alldata.trends <- alldata.long[is.pyramid == FALSE & (is.na(Gender) | Gender %in
     
 all.xvalues <- seq(1980, max(alldata.long$year), by = 5)
 
+alldata.trends[category == "Employment", variable := gsub("REMI", "REMI (BEA)", variable)]
+
 variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment"), 
                                .(category, variable, variable_name = `variable`)])
+
+# reorder variables
+variables.lu <- rbind(variables.lu[category == "Population"],
+                      variables.lu[category == "Employment"][order(variable)]
+                      )
 
 vars.cat <- unique(variables.lu$category)
 

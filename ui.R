@@ -58,7 +58,7 @@ navbarPage(
                             checkboxGroupInput('datasource',
                                          label = 'Source',
                                          choices = ordered.sources,
-                                         selected = ordered.sources
+                                         selected = ordered.sources[c(1, 3:4)]
                                          )
                             )
                  ), # end column

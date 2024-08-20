@@ -25,8 +25,13 @@ alldata.long <- melt(alldata[, c("Source", "category", "variable", "Region", "Ag
                 id.vars = c("Source", "category", "variable", "Region", "Age", "Race", "Units", "Gender"),
                 variable.name = "year", variable.factor = FALSE)
 
+# add rows for all races if missing
+alldata.long[, has_all_races := sum(Race == "All Races" | is.na(Race)), by = c("Source", "category", "variable", "Region", "Age", "Units", "Gender", "year")]
+alldata.long <- rbind(alldata.long, alldata.long[has_all_races == 0, .(Race = "All Races", value = sum(value)), 
+                                                 by = c("Source", "category", "variable", "Region", "Age", "Units", "Gender", "year")],
+                      fill = TRUE)[, has_all_races := NULL]
 alldata.long <- alldata.long[(startsWith(Race, "All Races") | is.na(Race)) & 
-                                 (category == "Population" & variable == "Total Population" | category != "Population")]
+                                 (category == "Population" & variable %in% c("Total Population", "Total Migrants") | category != "Population")]
 alldata.long[variable == "Total Population" & !is.na(Age) & !startsWith(Age, "All Ages"), variable := Age]
 
 alldata.long[, year := as.integer(year)]

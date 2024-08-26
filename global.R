@@ -93,6 +93,7 @@ plot_height <- "500px"
 
 
 psrc_style_modified <- function() {
+    # like psrcplot::psrc_style with some axes and grid options turned off
     font <- "Poppins"
     
     ggplot2::theme(
@@ -153,4 +154,53 @@ psrc_style_modified <- function() {
         panel.grid.minor = ggplot2::element_line(color="#cbcbcb"),
         panel.grid.major = ggplot2::element_line(color="#cbcbcb")
     )
+}
+
+make_interactive_modified <- function(p, title=NULL, subtitle=NULL){
+    # like psrcplot::make_interactive with vertical hovermode 
+    
+    x.vals <- length(ggplot2::layer_scales(p)$x$range$range)                                         # Number of x categories in ggplot object
+    x.pos <- ggplot2::layer_scales(p)$x$position                                                     # Left or bottom (i.e. bar or column chart)
+    geom_list <- sapply(p$layers, function(x) class(x$geom)[1])                                      # Used to differentiate between chart types  
+    #hover_yn <- if("GeomBar" %in% geom_list){NULL}else{"x"}
+    #hover_yn <- "y unified"
+    hover_yn <- "closest"
+    vlift <- if("GeomBar" %in% geom_list){1.10}else{1.05}
+    
+    p <- p + ggplot2::theme(axis.title = ggplot2::element_blank())                                   # Remove Bar labels and axis titles
+    m <- list(l = 50, r = 50, b = 200, t = 200, pad = 4)
+    p <- plotly::ggplotly(p, tooltip=c("text"), autosize = T, margin = m)                            # Make Interactive
+    p <- plotly::style(p, hoverlabel=list(font=list(family="Poppins", size=11, color="white")))      # Set Font for Hover-Text
+    p <- plotly::layout(p, xaxis=list(tickfont=list(family="Poppins", size=11, color="#2f3030")))    # Format X-Axis
+    p <- plotly::layout(p, yaxis=list(tickfont=list(family="Poppins", size=11, color="#2f3030")))    # Format Y-Axis
+    
+    # Turn on Legend
+    # if labels are rotated, they might run into the legend now?
+    p <- plotly::layout(p,
+                        legend=list(orientation="h", xanchor="center", xref="container", x=0.5, y=-0.10,         
+                                    title="", font=list(family="Poppins", size=11, color="#2f3030"),
+                                    pad=list(b=50, t=50)),
+                        hovermode = hover_yn)
+    
+    
+    p <- plotly::layout(p, title= list(text = ""))                                                   # Remove Plotly Title
+    
+    if(!(is.null(title)) & !(is.null(subtitle))) {                                                   # If there is both title and subtitle
+        
+        p <- plotly::layout(p, 
+                            annotations = list(x= 0 , y = vlift + 0.05, text = title,                  # -- add the title, located high enough for room for subtitle
+                                               xref='paper', yref='paper', showarrow = FALSE, 
+                                               font = list(family="Poppins Black",size=14, color="#4C4C4C")))
+        p <- plotly::layout(p, 
+                            annotations = list(x= 0, y = vlift, text = subtitle,                       # -- then add the subtitle 
+                                               showarrow = FALSE, xref='paper', yref='paper', 
+                                               font=list(family="Poppins",size=12, color="#4C4C4C")))
+    }else if(!(is.null(title)) & is.null(subtitle)) {                                                # If there is no Subtitle
+        
+        p <- plotly::layout(p, 
+                            annotations = list(x= 0, y = vlift, text = title,                          # -- just add the title
+                                               xref='paper', yref='paper', showarrow = FALSE,
+                                               font = list(family="Poppins Black",size=14, color="#4C4C4C")))
+    }
+    return(p)
 }

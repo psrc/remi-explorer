@@ -174,7 +174,14 @@ navbarPage(
                             checkboxGroupInput('datasource_pyr',
                                                label = 'Source',
                                                choices = ordered.sources.for.pyr,
-                                               selected = ordered.sources.for.pyr
+                                               selected = ordered.sources.for.pyr[c(1, 3)]
+                            )
+                        ),
+                        div(style = "width: 90%; float:left;",
+                            checkboxGroupInput('scale_pyr',
+                                               label = 'Scale',
+                                               choices = list("Proportions (%)" = "proportion"),
+                                               selected = c()
                             )
                         )
                  ), # end column

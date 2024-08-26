@@ -162,7 +162,7 @@ function(input, output, session) {
       return(paste(geo, title))
     }
     
-    get_pyramid_data <- function(yr, geo, source){
+    get_pyramid_data <- function(yr, geo, source, scale = c()){
       if(is.null(yr)) yr <- 2023
       if(is.null(geo)) geo <- "Region"
       data <- alldata.pyramid[year %in% yr & 
@@ -170,25 +170,27 @@ function(input, output, session) {
                              Region %in% geo &
                              Source %in% source][order(lower.age.limit)]
       if(nrow(data) == 0) return(NULL)
-      #dat <- rbind(copy(data)[, Gender := "Male"], copy(data)[, Gender := "Female"])
+      if("proportion" %in% scale){
+        data[, sumval := sum(value), by = c("Source", "category", "Region", "year")]
+        data[, value := value / sumval * 100]
+      }
       data[Gender == "Male", value := -value]
       return(data)
     }
     
     get_pyramid_table <- reactive({
-      get_pyramid_data(input$year, geography_pyr(), input$datasource_pyr)
+      get_pyramid_data(input$year, geography_pyr(), input$datasource_pyr, scale = input$scale_pyr)
     })
     
     plot_pyramid <- function(data, title, line_width = 1){
       if(is.null(data)) return(NULL)
-      data[, text := paste0(Source, ": ", round(abs(value)), " (", Age, ")")]
+      data[, text := paste0(Source, ": ", round(abs(value), 2), " (", Age, ")")]
       data.range <- range(abs(data$value), na.rm=TRUE)
       grps <- levels(data$Source)
       num.grps <- length(grps)
       l.colors <- unlist(psrcplot::psrc_colors["gnbopgy_5"])
       l.colors <- l.colors[1:num.grps]
       cols <- stats::setNames(l.colors, grps)
-      #browser()
       g <- ggplot(data, aes(y=value, x=reorder(Age, lower.age.limit), group=Source, colour=Source, text = text)) + 
         geom_line(data=subset(data, Gender=='Female'), linewidth=line_width) + geom_line(data=subset(data, Gender=='Male'), linewidth=line_width) + 
         geom_point(data=subset(data, Gender=='Female'), size = 0.1) + geom_point(data=subset(data, Gender=='Male'), size = 0.1) + 
@@ -199,7 +201,7 @@ function(input, output, session) {
       #browser()
       g <- g + geom_hline(yintercept = 0) + scale_color_manual(values=cols) + 
         scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + psrc_style_modified()
-      make_interactive(g, title = title) 
+      make_interactive_modified(g, title = title) 
     }
     output$plot_pyramid_region <- renderPlotly({
         plot_pyramid(get_pyramid_table(), pyramid_text()$title)

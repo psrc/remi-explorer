@@ -170,6 +170,13 @@ navbarPage(
                fluidRow(
                  column(width = 3,
                         uiOutput('yearUI'),
+                        div(style = 'margin: 3rem 0',
+                            radioButtons('scale_pyr',
+                                         label = 'Measure',
+                                         choices = list(
+                                           "Counts" = "count",
+                                           "Proportions (%)" = "proportion"),
+                            )),
                         div(style = "width: 90%; float:left;",
                             checkboxGroupInput('datasource_pyr',
                                                label = 'Source',
@@ -177,13 +184,6 @@ navbarPage(
                                                selected = ordered.sources.for.pyr[c(1, 3)]
                             )
                         ),
-                        div(style = "width: 90%; float:left;",
-                            checkboxGroupInput('scale_pyr',
-                                               label = 'Scale',
-                                               choices = list("Proportions (%)" = "proportion"),
-                                               selected = c()
-                            )
-                        )
                  ), # end column
                  column(width = 9, 
                         tabsetPanel(id = 'tabset_pyr',

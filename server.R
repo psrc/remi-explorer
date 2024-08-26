@@ -50,9 +50,9 @@ function(input, output, session) {
                    "moving_average" = get_moving_average(data)
                   )
     # add tooltip
-    data$tooltip <- paste0(data$Source, ": ", 
+    data$tooltip <- paste0(data$Source, " (", data$year, "): ", 
                            prettyNum(formattable::digits(round(data$value, 0), digits=0), 
-                                     big.mark = ","), " (", data$year, ")")
+                                     big.mark = ","))
     data
   }
     get_table <- reactive({
@@ -152,9 +152,13 @@ function(input, output, session) {
                   min=alldata.pyramid[, min(year)], 
                   max=max(all.xvalues), value = 2023, step=1)
     })
+    pyramid_text_percentage <- reactive({
+      if("proportion" %in% input$scale_pyr)return("(%)")
+      return("")
+    })
     
     pyramid_text <- reactive({
-      title <- paste("Population in ", input$year)
+      title <- paste("Population in ", input$year, pyramid_text_percentage())
       return(list(title = title))
     })
     
@@ -184,7 +188,7 @@ function(input, output, session) {
     
     plot_pyramid <- function(data, title, line_width = 1){
       if(is.null(data)) return(NULL)
-      data[, text := paste0(Source, ": ", round(abs(value), 2), " (", Age, ")")]
+      data[, text := paste0(Source, " (", Age, "):", round(abs(value), 2))]
       data.range <- range(abs(data$value), na.rm=TRUE)
       grps <- levels(data$Source)
       num.grps <- length(grps)
@@ -224,13 +228,13 @@ function(input, output, session) {
     })
     
     output$plot_pyramid_4counties <- renderPlotly({
-      f1 <- plot_pyramid(get_pyramid_data(input$year, "King", input$datasource_pyr), 
+      f1 <- plot_pyramid(get_pyramid_data(input$year, "King", input$datasource_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("King", pyramid_text()$title), line_width = 0.5)
-      f2 <- plot_pyramid(get_pyramid_data(input$year, "Kitsap", input$datasource_pyr), 
+      f2 <- plot_pyramid(get_pyramid_data(input$year, "Kitsap", input$datasource_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Kitsap", pyramid_text()$title), line_width = 0.5)
-      f3 <- plot_pyramid(get_pyramid_data(input$year, "Pierce", input$datasource_pyr), 
+      f3 <- plot_pyramid(get_pyramid_data(input$year, "Pierce", input$datasource_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Pierce", pyramid_text()$title), line_width = 0.5)
-      f4 <- plot_pyramid(get_pyramid_data(input$year, "Snohomish", input$datasource_pyr), 
+      f4 <- plot_pyramid(get_pyramid_data(input$year, "Snohomish", input$datasource_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Snohomish", pyramid_text()$title), line_width = 0.5)
       if(is.null(f1)) return(NULL)
       subplot(f1, 

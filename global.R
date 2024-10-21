@@ -84,14 +84,15 @@ dtype.choice <- c("Counts" = "total",
                  )
 
 # photo list
-psrc_photos <- c('bellevuetransitcenter.jpg',
-                 'canyon_road.png',
-                 'linkbeaconhillstn.jpg',
-                 'mtrainierparadisehikers.jpeg',
-                 'redmond-housing_0.jpg',
-                 'st_northgate_trim.png',
-                 'street-intersection.jpeg',
-                 'transitorienteddevelopment.jpeg')
+psrc_photos <- list.files("www", "*.jpg")
+# psrc_photos <- c('bellevuetransitcenter.jpg',
+#                  'canyon_road.png',
+#                  'linkbeaconhillstn.jpg',
+#                  'mtrainierparadisehikers.jpeg',
+#                  'redmond-housing_0.jpg',
+#                  'st_northgate_trim.png',
+#                  'street-intersection.jpeg',
+#                  'transitorienteddevelopment.jpeg')
 
 plot_height <- "500px"
 

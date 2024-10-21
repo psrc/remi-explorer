@@ -123,26 +123,28 @@ function(input, output, session) {
               nrows = 2, shareX = TRUE, margin = 0.07)
     })
     
-    output$afooter <- renderUI({
-      mission <- "PSRC’s mission is to ensure a thriving central Puget Sound, now and into the future, 
-      through planning for regional transportation, growth management and economic development."
+    # output$afooter <- renderUI({
+    #   mission <- "PSRC’s mission is to ensure a thriving central Puget Sound, now and into the future, 
+    #   through planning for regional transportation, growth management and economic development."
       
       #bs4Jumbotron(
-      jumbotron(
-        title = strong(div(class="footer_title", "About PSRC")),
-        lead = div(class="footer_mission",  mission),
-        
-        a(class = "footer_url", href="https://www.facebook.com/PugetSoundRegionalCouncil", icon("facebook"), target="_blank"),
-        a(class = "footer_url", href="https://twitter.com/SoundRegion", icon("twitter"), target="_blank"),
-        a(class = "footer_url", href="https://www.instagram.com/soundregion/", icon("instagram"), target="_blank"),
-        a(class = "footer_url", href="https://www.linkedin.com/company/soundregion", icon("linkedin"), target="_blank"),
-        
-        status = "info",
-        btnName = strong(div(class="footer_title", "Connect with PSRC", icon("envelope"))),
-        href = "mailto:info@psrc.org?"
-      )
+      # jumbotron(
+      #   title = strong(div(class="footer_title", "About PSRC")),
+      #   lead = div(class="footer_mission",  mission),
+      #   
+      #   #a(class = "footer_url", href="https://www.facebook.com/PugetSoundRegionalCouncil", icon("facebook"), target="_blank"),
+      #   #a(class = "footer_url", href="https://twitter.com/SoundRegion", icon("twitter"), target="_blank"),
+      #   #a(class = "footer_url", href="https://www.instagram.com/soundregion/", icon("instagram"), target="_blank"),
+      #   #a(class = "footer_url", href="https://www.linkedin.com/company/soundregion", icon("linkedin"), target="_blank"),
+      #   
+      #   status = "info",
+      #   btnName = strong(div(class="footer_title", "Connect with PSRC", icon("envelope"),
+      #                        
+      #                        )),
+      #   href = "mailto:info@psrc.org?"
+      # )
       
-    })
+#    })
     
     # Functions for plotting pyramids
     

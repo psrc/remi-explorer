@@ -27,8 +27,8 @@ navbarPage(
   tabPanel(title = "Time Series", 
            fluidRow(column(3, style = 'padding-right:0px;', 
                            div(
-                             img(#src = psrc_photos[sample.int(length(psrc_photos), 1)], 
-                                 src = psrc_photos[8],
+                             img(src = psrc_photos[sample.int(length(psrc_photos), 1)], 
+                                 #src = psrc_photos[8],
                                  width = "100%", 
                                  style = "padding-top: 0px; border-radius:0 0 30px 0;height:150px;")
                            )

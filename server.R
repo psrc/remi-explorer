@@ -38,8 +38,8 @@ function(input, output, session) {
     )
   })
 
-  get_data <- function(cat, var, geo, measure, source){
-    dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% source][order(year)]
+  get_data <- function(cat, var, geo, measure, source, scenario){
+    dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% c(source, scenario)][order(year)]
     data <- dat[Region == if(is.null(geo)) "Region" else geo, 
                 .(value = sum(value)), by = .(Source, category, variable, year)]
     if(nrow(data) == 0) return(NULL)
@@ -56,7 +56,7 @@ function(input, output, session) {
     data
   }
     get_table <- reactive({
-      get_data(input$category, input$variable, geography(), input$visopt, input$datasource)
+      get_data(input$category, input$variable, geography(), input$visopt, input$datasource, input$scenario)
     })
     
     text <- reactive({
@@ -80,7 +80,7 @@ function(input, output, session) {
                              ) + 
         scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + 
         geom_point(size = point_size, aes(color = Source)) 
-        
+      
       make_interactive(g, title = title)
     }
     output$plot_region <- renderPlotly({
@@ -108,13 +108,13 @@ function(input, output, session) {
     })
     
     output$plot_4counties <- renderPlotly({
-      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource), 
+      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource, input$scenario), 
                         "King", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource), 
+      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource, input$scenario), 
                         "Kitsap", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource), 
+      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource, input$scenario), 
                         "Pierce", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource), 
+      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource, input$scenario), 
                         "Snohomish", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       subplot(f1, 
               style(f2, showlegend = FALSE), 
@@ -168,13 +168,13 @@ function(input, output, session) {
       return(paste(geo, title))
     }
     
-    get_pyramid_data <- function(yr, geo, source, scale = c()){
+    get_pyramid_data <- function(yr, geo, source, scenario, scale = c()){
       if(is.null(yr)) yr <- 2023
       if(is.null(geo)) geo <- "Region"
       data <- alldata.pyramid[year %in% yr & 
                              category %in% "Population" & 
                              Region %in% geo &
-                             Source %in% source][order(lower.age.limit)]
+                             Source %in% c(source, scenario)][order(lower.age.limit)]
       if(nrow(data) == 0) return(NULL)
       if("proportion" %in% scale){
         data[, sumval := sum(value), by = c("Source", "category", "Region", "year")]
@@ -185,7 +185,7 @@ function(input, output, session) {
     }
     
     get_pyramid_table <- reactive({
-      get_pyramid_data(input$year, geography_pyr(), input$datasource_pyr, scale = input$scale_pyr)
+      get_pyramid_data(input$year, geography_pyr(), input$datasource_pyr, input$scenario_pyr, scale = input$scale_pyr)
     })
     
     plot_pyramid <- function(data, title, line_width = 1){
@@ -230,13 +230,13 @@ function(input, output, session) {
     })
     
     output$plot_pyramid_4counties <- renderPlotly({
-      f1 <- plot_pyramid(get_pyramid_data(input$year, "King", input$datasource_pyr, scale = input$scale_pyr), 
+      f1 <- plot_pyramid(get_pyramid_data(input$year, "King", input$datasource_pyr, input$scenario_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("King", pyramid_text()$title), line_width = 0.5)
-      f2 <- plot_pyramid(get_pyramid_data(input$year, "Kitsap", input$datasource_pyr, scale = input$scale_pyr), 
+      f2 <- plot_pyramid(get_pyramid_data(input$year, "Kitsap", input$datasource_pyr, input$scenario_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Kitsap", pyramid_text()$title), line_width = 0.5)
-      f3 <- plot_pyramid(get_pyramid_data(input$year, "Pierce", input$datasource_pyr, scale = input$scale_pyr), 
+      f3 <- plot_pyramid(get_pyramid_data(input$year, "Pierce", input$datasource_pyr, input$scenario_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Pierce", pyramid_text()$title), line_width = 0.5)
-      f4 <- plot_pyramid(get_pyramid_data(input$year, "Snohomish", input$datasource_pyr, scale = input$scale_pyr), 
+      f4 <- plot_pyramid(get_pyramid_data(input$year, "Snohomish", input$datasource_pyr, input$scenario_pyr, scale = input$scale_pyr), 
                          pyramid_geo_text("Snohomish", pyramid_text()$title), line_width = 0.5)
       if(is.null(f1)) return(NULL)
       subplot(f1, 

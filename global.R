@@ -14,6 +14,21 @@ alldata <- rbind(fread("data/ofm.csv", header = TRUE),
                  fread("data/remi_v32.csv", header = TRUE), 
                  fread("data/luvit.csv"), 
                  fill = TRUE)
+
+# extract scenarios
+remi.scenario.files <- list.files("data", "remi_scenario_.*csv")
+#names(remi.scenarios) <- gsub("remi_scenario_|.csv", "", remi.scenarios)
+#remi.scenarios <- as.list(remi.scenarios)
+
+# add scenarios to data
+all.scenarios <- NULL
+for(scen in 1:length(remi.scenario.files)){
+    all.scenarios <- rbind(all.scenarios, fread(file.path("data", remi.scenario.files[scen]), header = TRUE), fill = TRUE)
+}
+remi.scenarios <- unique(all.scenarios$Source)
+
+alldata <- rbind(alldata, all.scenarios, fill = TRUE)                     
+
 setnames(alldata, c("Main Measure", "Detailed Measure"), c("category", "variable"))
 
 alldata[startsWith(Age, "All"), Age := "All Ages"] # consolidate Age labels for all ages
@@ -44,9 +59,9 @@ for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))
 alldata.long <- alldata.long[!is.na(value)]
 alldata.long[Source == "LUV-it", Source := "LUVit"]
 sources <- unique(alldata.long[, Source])
-ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI")])), "OFM 2022", "LUVit")
+ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI") & ! sources %in% remi.scenarios])), "OFM 2022", "LUVit")
 ordered.sources.for.pyr <- ordered.sources[!ordered.sources %in% "LUVit"]
-alldata.long[, Source := factor(Source, levels = ordered.sources)]
+alldata.long[, Source := factor(Source, levels = c(ordered.sources, remi.scenarios))]
 
 alldata.long[, Age := gsub("Ages ", "", Age)]
 
@@ -66,8 +81,10 @@ all.xvalues <- seq(1980, max(alldata.long$year), by = 5)
 
 alldata.trends[category == "Employment", variable := gsub("REMI", "REMI (BEA)", variable)]
 
+# extract variable names
 variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment"), 
                                .(category, variable, variable_name = `variable`)])
+
 
 # reorder variables
 variables.lu <- rbind(variables.lu[category == "Population"],

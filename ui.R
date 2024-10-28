@@ -61,7 +61,13 @@ navbarPage(
                                          choices = ordered.sources,
                                          selected = ordered.sources[c(1, 3:4)]
                                          )
-                            )
+                            ),
+                        div(style = "width: 100%; float:left;",
+                            selectInput('scenario',
+                                        label = 'Scenario',
+                                        choices = remi.scenarios,
+                                        selected = NULL, multiple = TRUE)
+                        )
                  ), # end column
                  column(width = 9,
                         tabsetPanel(id = 'tabset',
@@ -185,6 +191,12 @@ navbarPage(
                                                selected = ordered.sources.for.pyr[c(1, 3)]
                             )
                         ),
+                        div(style = "width: 100%; float:left;",
+                            selectInput('scenario_pyr',
+                                        label = 'Scenario',
+                                        choices = remi.scenarios,
+                                        selected = NULL, multiple = TRUE)
+                        )
                  ), # end column
                  column(width = 9, 
                         tabsetPanel(id = 'tabset_pyr',

@@ -37,6 +37,24 @@ function(input, output, session) {
                     selected = variables()[1])
     )
   })
+  
+  output$var_scatter1 <- renderUI({
+    div(style = "width: 100%; float:left;",
+        selectInput('variable_scatter1',
+                    label = 'Variable for X',
+                    choices = variables(),
+                    selected = variables()[1])
+    )
+  })
+  
+  output$var_scatter2 <- renderUI({
+    div(style = "width: 100%; float:left;",
+        selectInput('variable_scatter2',
+                    label = 'Variable for Y',
+                    choices = variables(),
+                    selected = variables()[1])
+    )
+  })
 
   get_data <- function(cat, var, geo, measure, source, scenario){
     dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% c(source, scenario)][order(year)]
@@ -55,7 +73,7 @@ function(input, output, session) {
                                      big.mark = ","))
     data
   }
-    get_table <- reactive({
+  get_table <- reactive({
       get_data(input$category, input$variable, geography(), input$visopt, input$datasource, input$scenario)
     })
     

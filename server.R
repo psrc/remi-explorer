@@ -14,7 +14,6 @@ function(input, output, session) {
   
   get_moving_average <- function(dat){
     dat[, value := (value - shift(value, n = 5))/5, by = c("Source", "category", "variable")]
-    #dat[!startsWith(Source, "LUV")]
   }
   
   
@@ -26,8 +25,21 @@ function(input, output, session) {
     v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
   })
   
+  variablesX <- reactive({
+      t <- variables.lu[category %in% input$category_scatter1, ]
+      v.raw <- as.list(unique(t$variable))
+      v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
+  })
+  
+  variablesY <- reactive({
+      t <- variables.lu[category %in% input$category_scatter2, ]
+      v.raw <- as.list(unique(t$variable))
+      v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
+  })
+  
   geography <- reactive({input$tabset})
   geography_pyr <- reactive({input$tabset_pyr})
+  geography_scatter <- reactive({input$tabset_scatter})
   
   output$var <- renderUI({
     div(style = "width: 100%; float:left;",
@@ -42,8 +54,8 @@ function(input, output, session) {
     div(style = "width: 100%; float:left;",
         selectInput('variable_scatter1',
                     label = 'Variable for X',
-                    choices = variables(),
-                    selected = variables()[1])
+                    choices = variablesX(),
+                    selected = variablesX()[1])
     )
   })
   
@@ -51,12 +63,12 @@ function(input, output, session) {
     div(style = "width: 100%; float:left;",
         selectInput('variable_scatter2',
                     label = 'Variable for Y',
-                    choices = variables(),
-                    selected = variables()[1])
+                    choices = variablesY(),
+                    selected = variablesY()[1])
     )
   })
 
-  get_data <- function(cat, var, geo, measure, source, scenario){
+  get_data <- function(cat, var, geo, measure, source, scenario, add_tooltip = TRUE){
     dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% c(source, scenario)][order(year)]
     data <- dat[Region == if(is.null(geo)) "Region" else geo, 
                 .(value = sum(value)), by = .(Source, category, variable, year)]
@@ -68,8 +80,10 @@ function(input, output, session) {
                    "moving_average" = get_moving_average(data)
                   )
     # add tooltip
-    data$tooltip <- paste0(data$Source, " (", data$year, "): ", 
-                           prettyNum(formattable::digits(round(data$value, 0), digits=0), 
+    if(add_tooltip)
+        data$tooltip <- paste0(data$Source, " (", data$year, "): ", 
+                           prettyNum(formattable::digits(round(data$value, tooltip.digits[measure]), 
+                                                         digits=tooltip.digits[measure]), 
                                      big.mark = ","))
     data
   }
@@ -263,5 +277,99 @@ function(input, output, session) {
               style(f4, showlegend = FALSE),
               nrows = 2, shareX = FALSE, margin = 0.07)
     })
+    
+    get_table_varX <- reactive({
+        get_data(input$category_scatter1, input$variable_scatter1, geography_scatter(), 
+                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, add_tooltip = FALSE)
+    })
+    
+    get_table_varY <- reactive({
+        get_data(input$category_scatter2, input$variable_scatter2, geography_scatter(), 
+                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, add_tooltip = FALSE)
+    })
+    
+    get_table_scatter <- reactive({
+        datx <- get_table_varX()
+        daty <- get_table_varY()
+        if(is.null(datx) || is.null(daty)) return(NULL)
+        data <- merge(datx[, .(Source, year, valx = value)], 
+                      daty[, .(Source, year, valy = value)], by = c("Source", "year"))
+        data$tooltip <- paste0(data$Source, " (", data$year, "): \n", 
+                                " x = ", prettyNum(formattable::digits(round(data$valx, tooltip.digits[input$visopt_scatter]), 
+                                                         digits=tooltip.digits[input$visopt_scatter]), 
+                                     big.mark = ","),
+                               "\n y = ", prettyNum(formattable::digits(round(data$valy, tooltip.digits[input$visopt_scatter]), 
+                                                                       digits=tooltip.digits[input$visopt_scatter]), 
+                                                   big.mark = ","))
+        data
+    })
+    
+
+    
+    text_scatter <- reactive({
+        desc <- switch(input$visopt_scatter,
+                       'total' = 'Counts',
+                       'delta' = 'Annual Change',
+                       "percent_delta" = 'Percent Annual Change',
+                       "moving_average" = '5y moving average')
+        alias1 <- variables.lu[variable == input$variable_scatter1, .(variable_name)]
+        alias2 <- variables.lu[variable == input$variable_scatter2, .(variable_name)]
+        title <- paste(desc, 'of', unique(alias2$variable_name), "~", unique(alias1$variable_name))
+        
+        return(list(title = title))
+    })
+    
+    plot_scatter <- function(data, title, xlab, ylab){
+        if(is.null(data)) return(NULL)
+        data.range <- range(data$valx, data$valy, na.rm=TRUE)
+        grps <- levels(data$Source)
+        num.grps <- length(grps)
+        l.colors <- unlist(psrcplot::psrc_colors["gnbopgy_5"])
+        l.colors <- l.colors[1:num.grps]
+        cols <- stats::setNames(l.colors, grps)
+        g <- ggplot(data, aes(x = valx, y=valy, group=Source, colour=Source, text = tooltip)) + 
+            geom_point() + theme(legend.title=element_blank()) 
+        #browser()
+        g <- g + scale_color_manual(values=cols) + 
+            scale_colour_discrete(drop=TRUE, limits = levels(data$Source)) + psrc_style_modified() + 
+            labs(x = xlab, y = ylab)
+        make_interactive_modified(g, title = title, remove_labs = FALSE)
+    }
+    
+    
+    output$plot_region_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    output$plot_king_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    output$plot_kitsap_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    output$plot_pierce_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    output$plot_snohomish_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    output$plot_nation_scatter <- renderPlotly({
+        plot_scatter(get_table_scatter(), text_scatter()$title, input$variable_scatter1, input$variable_scatter2)
+    })
+    
+    # output$plot_4counties_scatter <- renderPlotly({
+    #     f1 <- plot_scatter(get_data(input$category, input$variable, "King", input$visopt, input$datasource, input$scenario), 
+    #                       "King", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+    #     f2 <- plot_scatter(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource, input$scenario), 
+    #                       "Kitsap", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+    #     f3 <- plot_scatter(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource, input$scenario), 
+    #                       "Pierce", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+    #     f4 <- plot_scatter(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource, input$scenario), 
+    #                       "Snohomish", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+    #     subplot(f1, 
+    #             style(f2, showlegend = FALSE), 
+    #             style(f3, showlegend = FALSE),
+    #             style(f4, showlegend = FALSE),
+    #             nrows = 2, shareX = TRUE, margin = 0.07)
+    # })
     
 }

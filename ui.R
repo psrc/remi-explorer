@@ -287,10 +287,10 @@ navbarPage(
   ),
   tabPanel(title = "Scatter Plots", 
            fluidRow(
-             column(3, style = 'padding-right:0px;', 
+             column(3, style = 'padding-right:0px;',
                            div(
-                             img(src = psrc_photos[sample.int(length(psrc_photos), 1)], 
-                                 width = "100%", 
+                             img(src = psrc_photos[sample.int(length(psrc_photos), 1)],
+                                 width = "100%",
                                  style = "padding-top: 0px; border-radius:0 0 30px 0;height:150px;")
                            )
                     ),
@@ -299,137 +299,142 @@ navbarPage(
                     title = strong(div(class="mainpage_title", "REMI Explorer")),
                     status = "success",
                     btnName = strong(div(class="mainpage_subtitle", "Compare REMI and other scenarios"))
+                    )
                   )
-                  )
-                  ),
-           div(style = 'margin: 3rem 5rem;',
-               fluidRow(
-                 column(width = 6, 
-                        fluidRow(
-                          column(width = 3, 
-                            selectInput('category_scatter1',
-                                    label = 'Category for X',
-                                    choices = vars.cat, # list all categories available from variables table (regardless of survey)
-                              )),
-                          column(width = 3, 
-                              uiOutput('var_scatter1')
-                            )),
-                        fluidRow(
-                          column(width = 3, 
-                            selectInput('category_scatter2',
-                                      label = 'Category for Y',
-                                      choices = vars.cat, # list all categories available from variables table (regardless of survey)
-                              )),
-                          column(width = 3, 
-                              uiOutput('var_scatter2'))
-                          ),
-                        div(style = 'margin: 3rem 0',
-                            radioButtons('visopt_scatter',
-                                         label = 'Measure',
-                                         choices = dtype.choice
-                            )),
+            ),  # end of title bar
+            div(style = 'margin: 3rem 5rem;',
+                fluidRow(
+                  column(width = 4, 
+                         fluidRow(
+                           column(width = 5, #style = "background-color:yellow;", div(style = "height:100px;")
+                             selectInput('category_scatter1',
+                                     label = 'Category for X',
+                                     choices = vars.cat, # list all categories available from variables table
+                               )
+                            ),
+                           column(width = 7, #style = "background-color:green;", div(style = "height:100px;")
+                               uiOutput('var_scatter1')
+                             )
+                            ), # end of row for X
+                         fluidRow(
+                           column(width = 5,
+                             selectInput('category_scatter2',
+                                       label = 'Category for Y',
+                                       choices = vars.cat,
+                                       selected = vars.cat[2]
+                               )
+                            ),
+                           column(width = 7,
+                               uiOutput('var_scatter2')
+                               )
+                           ), # end of row for Y
+                         div(style = 'margin: 0rem 0',
+                             radioButtons('visopt_scatter',
+                                          label = 'Measure',
+                                          choices = dtype.choice
+                             )
+                            ), # end of measure div
                         div(style = "width: 90%; float:left;",
                             checkboxGroupInput('datasource_scatter',
                                                label = 'Source',
                                                choices = ordered.sources,
                                                selected = ordered.sources[c(1, 3:4)]
                             )
-                        ),
+                         ), # end of source div
                         div(style = "width: 100%; float:left;",
                             selectInput('scenario_scatter',
                                         label = 'Scenario',
                                         choices = remi.scenarios,
                                         selected = NULL, multiple = TRUE)
-                        )
-                      ), # end column
-                 column(width = 7,
-                        tabsetPanel(id = 'tabset',
+                        ) # end of scenario div
+                    ), # end side column
+                  column(width = 8, #style = "background-color:blue;", div(style = "height:100px;")
+                        tabsetPanel(id = 'tabset_scatter',
                                     type = 'pills',
                                     selected = "Region",
                                     tabPanel('Region',
                                              value = 'Region',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot_region', height = plot_height),
+                                                 plotlyOutput('plot_region_scatter', height = plot_height),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),
                                                style = 'margin-top: 1rem'
                                              )
                                     ),
-                                    tabPanel('All Counties',
-                                             value = 'four_counties',
-                                             div(
-                                               withSpinner(
-                                                 plotlyOutput('plot_4counties', height = plot_height),
-                                                 type = 5,
-                                                 color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
-                                               ),
-                                               style = 'margin-top: 1rem'
-                                             )       
-                                    ),
+                                    # tabPanel('All Counties',
+                                    #          value = 'four_counties',
+                                    #          div(
+                                    #            withSpinner(
+                                    #              plotlyOutput('plot_4counties_scatter', height = plot_height),
+                                    #              type = 5,
+                                    #              color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
+                                    #            ),
+                                    #            style = 'margin-top: 1rem'
+                                    #          )
+                                    # ),
                                     tabPanel('King',
                                              value = 'King',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot_king', height = plot_height),
+                                                 plotlyOutput('plot_king_scatter', height = plot_height),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),
                                                style = 'margin-top: 1rem'
-                                             )       
+                                             )
                                     ),
                                     tabPanel('Kitsap',
                                              value = 'Kitsap',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot_kitsap', height = plot_height),
+                                                 plotlyOutput('plot_kitsap_scatter', height = plot_height),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),
                                                style = 'margin-top: 1rem'
-                                             )       
+                                             )
                                     ),
                                     tabPanel('Pierce',
                                              value = 'Pierce',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot_pierce', height = plot_height),
+                                                 plotlyOutput('plot_pierce_scatter', height = plot_height),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),
                                                style = 'margin-top: 1rem'
-                                             )       
+                                             )
                                     ),
                                     tabPanel('Snohomish',
                                              value = 'Snohomish',
                                              div(
                                                withSpinner(
-                                                 plotlyOutput('plot_snohomish', height = plot_height),
+                                                 plotlyOutput('plot_snohomish_scatter', height = plot_height),
                                                  type = 5,
                                                  color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
                                                ),
                                                style = 'margin-top: 1rem'
-                                             )       
-                                    ),
-                                    tabPanel('Nation',
-                                             value = 'Nation',
-                                             div(
-                                               withSpinner(
-                                                 plotlyOutput('plot_nation', height = plot_height),
-                                                 type = 5,
-                                                 color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
-                                               ),
-                                               style = 'margin-top: 1rem'
-                                             )       
-                                    )
-                                    
-                        ) # end tabsetPanel
-                        
-                 ) # end column
-               ) # end fluidRow
-           ) # end div
-  ),
+                                             )
+                                    )#,
+                                    # tabPanel('Nation',
+                                    #          value = 'Nation',
+                                    #          div(
+                                    #            withSpinner(
+                                    #              plotlyOutput('plot_nation_scatter', height = plot_height),
+                                    #              type = 5,
+                                    #              color = psrc_colors$pgnobgy_10[sample.int(10, 1)]
+                                    #            ),
+                                    #            style = 'margin-top: 1rem'
+                                    #          )
+                                    # )
+  #                                   
+                         ) # end tabsetPanel
+                  ) # end tab column
+                ) # end fluidRow
+            ) # end div
+   ),
   tags$footer(uiOutput('afooter'))
 ) # end navbarpage
 

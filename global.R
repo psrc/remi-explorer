@@ -99,6 +99,7 @@ dtype.choice <- c("Counts" = "total",
                   "Percent Annual Change" = "percent_delta",
                   "5y moving average" = "moving_average"
                  )
+tooltip.digits <- c(total = 0, delta = 1, percent_delta = 2, moving_average = 2) 
 
 # photo list
 psrc_photos <- list.files("www", "*.jpg")
@@ -160,7 +161,7 @@ psrc_style_modified <- function() {
         strip.text = ggplot2::element_text(size  = 12,  hjust = 0),
         
         #Axis format
-        #This sets the text font, size and colour for the axis test, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
+        #This sets the text font, size and colour for the axis text, as well as setting the margins and removes lines and ticks. In some cases, axis lines and axis ticks are things we would want to have in the chart - the cookbook shows examples of how to do so.
         axis.title = ggplot2::element_text(family=font, size=12, color="#2f3030"),
         axis.text = ggplot2::element_text(family=font, size=11, color="#2f3030"),
         axis.text.x = ggplot2::element_text(margin=ggplot2::margin(5, b = 10)),
@@ -178,7 +179,7 @@ psrc_style_modified <- function() {
     )
 }
 
-make_interactive_modified <- function(p, title=NULL, subtitle=NULL){
+make_interactive_modified <- function(p, title=NULL, subtitle=NULL, remove_labs = TRUE){
     # like psrcplot::make_interactive with vertical hovermode 
     
     x.vals <- length(ggplot2::layer_scales(p)$x$range$range)                                         # Number of x categories in ggplot object
@@ -189,7 +190,8 @@ make_interactive_modified <- function(p, title=NULL, subtitle=NULL){
     hover_yn <- "closest"
     vlift <- if("GeomBar" %in% geom_list){1.10}else{1.05}
     
-    p <- p + ggplot2::theme(axis.title = ggplot2::element_blank())                                   # Remove Bar labels and axis titles
+    if(remove_labs)
+        p <- p + ggplot2::theme(axis.title = ggplot2::element_blank())                                   # Remove Bar labels and axis titles
     m <- list(l = 50, r = 50, b = 200, t = 200, pad = 4)
     p <- plotly::ggplotly(p, tooltip=c("text"), autosize = T, margin = m)                            # Make Interactive
     p <- plotly::style(p, hoverlabel=list(font=list(family="Poppins", size=11, color="white")))      # Set Font for Hover-Text
@@ -199,7 +201,8 @@ make_interactive_modified <- function(p, title=NULL, subtitle=NULL){
     # Turn on Legend
     # if labels are rotated, they might run into the legend now?
     p <- plotly::layout(p,
-                        legend=list(orientation="h", xanchor="center", xref="container", x=0.5, y=-0.10,         
+                        legend=list(orientation="h", xanchor="center", xref="container", x=0.5, 
+                                    y=if(remove_labs) -0.10 else -0.2,         
                                     title="", font=list(family="Poppins", size=11, color="#2f3030"),
                                     pad=list(b=50, t=50)),
                         hovermode = hover_yn)

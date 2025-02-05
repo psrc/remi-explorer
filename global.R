@@ -23,7 +23,10 @@ remi.scenario.files <- list.files("data", "remi_scenario_.*csv")
 # add scenarios to data
 all.scenarios <- NULL
 for(scen in 1:length(remi.scenario.files)){
-    all.scenarios <- rbind(all.scenarios, fread(file.path("data", remi.scenario.files[scen]), header = TRUE), fill = TRUE)
+    thisdat <- fread(file.path("data", remi.scenario.files[scen]), header = TRUE)
+    if(!colnames(thisdat)[1] == "Source") # for tables that start at the second row
+        thisdat <- fread(file.path("data", remi.scenario.files[scen]), header = TRUE, skip = 1)
+    all.scenarios <- rbind(all.scenarios, thisdat, fill = TRUE)
 }
 remi.scenarios <- unique(all.scenarios$Source)
 

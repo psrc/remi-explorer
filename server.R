@@ -68,8 +68,18 @@ function(input, output, session) {
     )
   })
 
-  get_data <- function(cat, var, geo, measure, source, scenario, add_tooltip = TRUE){
+  output$yearspanTS <- renderUI({
+      minyear <- alldata.long[, min(year)]
+      maxyear <- alldata.long[, max(year)]
+      sliderInput('yearspan', '', sep="",
+                  min=minyear, 
+                  max=maxyear, value = c(minyear, maxyear))
+  })
+  
+  get_data <- function(cat, var, geo, measure, source, scenario, yearspan = NULL, add_tooltip = TRUE){
     dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% c(source, scenario)][order(year)]
+    if(!is.null(yearspan))
+        dat <- dat[year >= yearspan[1] & year <= yearspan[2]]
     data <- dat[Region == if(is.null(geo)) "Region" else geo, 
                 .(value = sum(value)), by = .(Source, category, variable, year)]
     if(nrow(data) == 0) return(NULL)
@@ -88,7 +98,8 @@ function(input, output, session) {
     data
   }
   get_table <- reactive({
-      get_data(input$category, input$variable, geography(), input$visopt, input$datasource, input$scenario)
+      get_data(input$category, input$variable, geography(), input$visopt, input$datasource, input$scenario,
+               input$yearspan)
     })
     
     text <- reactive({
@@ -140,13 +151,13 @@ function(input, output, session) {
     })
     
     output$plot_4counties <- renderPlotly({
-      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource, input$scenario), 
+      f1 <- plot_trends(get_data(input$category, input$variable, "King", input$visopt, input$datasource, input$scenario, input$yearspan), 
                         "King", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource, input$scenario), 
+      f2 <- plot_trends(get_data(input$category, input$variable, "Kitsap", input$visopt, input$datasource, input$scenario, input$yearspan), 
                         "Kitsap", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource, input$scenario), 
+      f3 <- plot_trends(get_data(input$category, input$variable, "Pierce", input$visopt, input$datasource, input$scenario, input$yearspan), 
                         "Pierce", line_width = 0.3, point_size = 0.5, breaks.by = 10)
-      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource, input$scenario), 
+      f4 <- plot_trends(get_data(input$category, input$variable, "Snohomish", input$visopt, input$datasource, input$scenario, input$yearspan), 
                         "Snohomish", line_width = 0.3, point_size = 0.5, breaks.by = 10)
       subplot(f1, 
               style(f2, showlegend = FALSE), 

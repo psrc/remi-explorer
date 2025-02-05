@@ -66,6 +66,9 @@ navbarPage(
                                         label = 'Scenario',
                                         choices = remi.scenarios,
                                         selected = NULL, multiple = TRUE)
+                        ),
+                        div(style = "width: 100%; float:left;",
+                            uiOutput('yearspanTS')
                         )
                  ), # end column
                  column(width = 9,

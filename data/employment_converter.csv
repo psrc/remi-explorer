@@ -1,0 +1,46 @@
+﻿Category,Region,WAQB2022,REF18fct
+All Sectors w Military,Region,2239.688,0
+All Sectors w Military,King County,1478.275,0
+All Sectors w Military,Kitsap County,102.565,0
+All Sectors w Military,Pierce County,366.661,0
+All Sectors w Military,Snohomish County,292.187,0
+Const Res,Region,138.05,1.158075657
+Const Res,King County,80.733,1.158075657
+Const Res,Kitsap County,5.15,1.158075657
+Const Res,Pierce County,26.767,1.158075657
+Const Res,Snohomish County,25.4,1.158075657
+Manuf,Region,163.099,1.014068399
+Manuf,King County,91.858,1.014068399
+Manuf,Kitsap County,2.883,1.014068399
+Manuf,Pierce County,16.983,1.014068399
+Manuf,Snohomish County,51.375,1.014068399
+WTU,Region,180.625,1.024050168
+WTU,King County,127.133,1.024050168
+WTU,Kitsap County,2.667,1.024050168
+WTU,Pierce County,34.708,1.024050168
+WTU,Snohomish County,16.117,1.024050168
+Retail (no 722),Region,189.017,1.025079782
+Retail (no 722),King County,107.442,1.025079782
+Retail (no 722),Kitsap County,11.1,1.025079782
+Retail (no 722),Pierce County,37.283,1.025079782
+Retail (no 722),Snohomish County,33.192,1.025079782
+Services,Region,1120.962894,1.084462424
+Services,King County,828.884,1.084462424
+Services,Kitsap County,36.75289386,1.084462424
+Services,Pierce County,147.259,1.084462424
+Services,Snohomish County,108.067,1.084462424
+FIRE,Region,106.9631061,1.095384615
+FIRE,King County,75.983,1.095384615
+FIRE,Kitsap County,3.280106143,1.095384615
+FIRE,Pierce County,14.3,1.095384615
+FIRE,Snohomish County,13.4,1.095384615
+Public GovEd,Region,295.425,1
+Public GovEd,King County,166.242,1
+Public GovEd,Kitsap County,32.85,1
+Public GovEd,Pierce County,57.508,1
+Public GovEd,Snohomish County,38.825,1
+Uniformed Military,Region,45.546,1
+Uniformed Military,King County,0,1
+Uniformed Military,Kitsap County,7.882,1
+Uniformed Military,Pierce County,31.853,1
+Uniformed Military,Snohomish County,5.811,1

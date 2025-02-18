@@ -76,6 +76,14 @@ function(input, output, session) {
                   max=maxyear, value = c(minyear, maxyear))
   })
   
+  output$yearspanScatter <- renderUI({
+      minyear <- alldata.long[, min(year)]
+      maxyear <- alldata.long[, max(year)]
+      sliderInput('yearspanSc', '', sep="",
+                  min=minyear, 
+                  max=maxyear, value = c(minyear, maxyear))
+  })
+  
   get_data <- function(cat, var, geo, measure, source, scenario, yearspan = NULL, add_tooltip = TRUE){
     dat <- alldata.trends[category %in% cat & variable %in% var & Source %in% c(source, scenario)][order(year)]
     if(!is.null(yearspan))
@@ -291,12 +299,14 @@ function(input, output, session) {
     
     get_table_varX <- reactive({
         get_data(input$category_scatter1, input$variable_scatter1, geography_scatter(), 
-                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, add_tooltip = FALSE)
+                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, input$yearspanSc,
+                 add_tooltip = FALSE)
     })
     
     get_table_varY <- reactive({
         get_data(input$category_scatter2, input$variable_scatter2, geography_scatter(), 
-                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, add_tooltip = FALSE)
+                 input$visopt_scatter, input$datasource_scatter, input$scenario_scatter, input$yearspanSc,
+                 add_tooltip = FALSE)
     })
     
     get_table_scatter <- reactive({

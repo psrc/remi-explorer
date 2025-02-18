@@ -349,7 +349,10 @@ navbarPage(
                                         label = 'Scenario',
                                         choices = remi.scenarios,
                                         selected = NULL, multiple = TRUE)
-                        ) # end of scenario div
+                        ), # end of scenario div
+                        div(style = "width: 100%; float:left;",
+                            uiOutput('yearspanScatter')
+                        )
                     ), # end side column
                   column(width = 8, #style = "background-color:blue;", div(style = "height:100px;")
                         tabsetPanel(id = 'tabset_scatter',

@@ -5,7 +5,9 @@ library(readxl)
 scenario.name <- "LUVit_emp_cnty_adj_mig" 
 
 # name of the Excel file containing REMI results, exported directly from REMI
-remi.results.file <- "~/T/2025Q1/Hana/REMI/Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx"
+#data.dir <- "~/T/2025Q1/Hana/REMI"
+data.dir <- "."
+remi.results.file <- file.path(data.dir, "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx")
 
 # names of the individual sheets that we want to include in the resulting dataset
 # and the corresponding value in the "Main Measure" column 

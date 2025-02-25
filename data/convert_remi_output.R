@@ -1,6 +1,8 @@
 library(data.table)
 library(readxl)
 
+source("tools.R")
+
 # list of scenario names (can be anything) and the corresponding Excel files 
 # containing REMI results, exported directly from REMI
 scenario.list <- list(
@@ -15,9 +17,9 @@ data.dir <- "~/T/2025Q1/Hana/REMI"
 
 # which scenario from the list above to process
 scenario.name <- "LUVit_pop"
-#scenario.name <- "LUVit_emp_cnty"
-#scenario.name <- "LUVit_emp_cnty_adj_mig"
-#scenario.name <- "higher_amenity" 
+scenario.name <- "LUVit_emp_cnty"
+scenario.name <- "LUVit_emp_cnty_adj_mig"
+scenario.name <- "higher_amenity" 
 
 remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
 
@@ -125,6 +127,13 @@ alldat[is.na(Gender), Gender := "Total"]
 
 # there seems to be some duplicates, so remove them
 alldat <- alldat[!duplicated(alldat, by = c("Source", "Main Measure", "Detailed Measure", "Region", "Age", "Race", "Gender", "Units", "year"))]
+
+# derive HH pop
+gqest <- read_xlsx("gq.xlsx", skip = 1)
+hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
+                           Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
+                gqest = data.table(gqest), year = 2024)
+alldat <- rbind(alldat, hhpop)
 
 # convert to wide format
 alldatw <- dcast(alldat, Source + `Main Measure` + `Detailed Measure` + Region + Age + Race + Gender + Units ~ year,

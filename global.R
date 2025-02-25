@@ -51,7 +51,8 @@ alldata.long <- rbind(alldata.long, alldata.long[has_all_races == 0, .(Race = "A
 
 alldata.long <- alldata.long[(startsWith(Race, "All Races") | is.na(Race)) & 
                                  (category == "Population" & (variable %in% c("Total Population", "Total Migrants", "Retired Migrants",
-                                                                              "International Migrants", "Economic Migrants", "Special Populations Migration") #| 
+                                                                              "International Migrants", "Economic Migrants", "Special Populations Migration",
+                                                                              "Household Population") #| 
                                                                   #grepl("^Retired Migrants$|^International Migrants$|^Economic Migrants|^Special Populations Migration", variable)
                                                               ) | 
                                       category != "Population")]

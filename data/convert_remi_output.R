@@ -2,12 +2,15 @@ library(data.table)
 library(readxl)
 
 # what should this scenario be called
-scenario.name <- "LUVit_emp_cnty_adj_mig" 
+scenario.name <- "LUVit_pop_labopt"
+scenario.name <- "higher_amenity" 
 
 # name of the Excel file containing REMI results, exported directly from REMI
 #data.dir <- "~/T/2025Q1/Hana/REMI"
 data.dir <- "."
 remi.results.file <- file.path(data.dir, "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx")
+remi.results.file <- file.path(data.dir, "Dashboard_Indicators_higher_amenity.xlsx")
+
 
 # names of the individual sheets that we want to include in the resulting dataset
 # and the corresponding value in the "Main Measure" column 
@@ -51,7 +54,7 @@ for(sh in names(sheets)){
         remil[, Category := Industry][, Industry := NULL] # rename Industry -> Category
         remil[startsWith(Category, "Const Res"), Category := "Const Res"]
         remil[startsWith(Category, "All Industries"), Category := "All Sectors w Military"]
-        remil[startsWith(Category, "Retail"), Category := "Retail (no 722)"]
+        remil[startsWith(Category, "Retail"), Category := "Retail (No 722)"]
         remiemp <- remil[as.integer(year) > 2021] # for later keep only current and projected years
         # aggregate FIRE and Services
         remil[Category %in% c("FIRE", "Services"), value := sum(value), by = c("Region", "Units", "year")]

@@ -12,7 +12,7 @@ install_psrc_fonts()
 alldata <- rbind(fread("data/ofm.csv", header = TRUE), 
                  fread("data/remi_v31.csv", header = TRUE), 
                  fread("data/remi_v32.csv", header = TRUE), 
-                 fread("data/luvit.csv"), 
+                 fread("data/luvit.csv", header = TRUE), 
                  fill = TRUE)
 
 # extract scenarios
@@ -48,6 +48,7 @@ alldata.long[, has_all_races := sum(Race == "All Races" | is.na(Race)), by = c("
 alldata.long <- rbind(alldata.long, alldata.long[has_all_races == 0, .(Race = "All Races", value = sum(value)), 
                                                  by = c("Source", "category", "variable", "Region", "Age", "Units", "Gender", "year")],
                       fill = TRUE)[, has_all_races := NULL]
+
 alldata.long <- alldata.long[(startsWith(Race, "All Races") | is.na(Race)) & 
                                  (category == "Population" & (variable %in% c("Total Population", "Total Migrants", "Retired Migrants",
                                                                               "International Migrants", "Economic Migrants", "Special Populations Migration") #| 
@@ -55,6 +56,7 @@ alldata.long <- alldata.long[(startsWith(Race, "All Races") | is.na(Race)) &
                                                               ) | 
                                       category != "Population")]
 alldata.long[variable == "Total Population" & !is.na(Age) & !startsWith(Age, "All Ages"), variable := Age]
+alldata.long[category == "Labor Force", variable := gsub(" - Total", "", variable)]
 
 alldata.long[, year := as.integer(year)]
 for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))
@@ -85,13 +87,14 @@ all.xvalues <- seq(1980, max(alldata.long$year), by = 5)
 alldata.trends[category == "Employment", variable := gsub("REMI", "REMI (BEA)", variable)]
 
 # extract variable names
-variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment"), 
+variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment", "Labor Force"), 
                                .(category, variable, variable_name = `variable`)])
 
 
 # reorder variables
 variables.lu <- rbind(variables.lu[category == "Population"],
-                      variables.lu[category == "Employment"][order(variable)]
+                      variables.lu[category == "Employment"][order(variable)],
+                      variables.lu[category == "Labor Force"]
                       )
 
 vars.cat <- unique(variables.lu$category)

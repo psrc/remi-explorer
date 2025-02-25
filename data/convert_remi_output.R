@@ -1,16 +1,25 @@
 library(data.table)
 library(readxl)
 
-# what should this scenario be called
-scenario.name <- "LUVit_pop_labopt"
-scenario.name <- "higher_amenity" 
+# list of scenario names (can be anything) and the corresponding Excel files 
+# containing REMI results, exported directly from REMI
+scenario.list <- list(
+    LUVit_pop = "Dashboard_Indicators_LUVitPop.xlsx",
+    LUVit_emp_cnty = "Dashboard_Indicators_LUVitEmpSecCnty.xlsx",
+    LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
+    higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx"
+)
+# directory of the REMI excel files
+data.dir <- "~/T/2025Q1/Hana/REMI"
+#data.dir <- "."
 
-# name of the Excel file containing REMI results, exported directly from REMI
-#data.dir <- "~/T/2025Q1/Hana/REMI"
-data.dir <- "."
-remi.results.file <- file.path(data.dir, "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx")
-remi.results.file <- file.path(data.dir, "Dashboard_Indicators_higher_amenity.xlsx")
+# which scenario from the list above to process
+scenario.name <- "LUVit_pop"
+#scenario.name <- "LUVit_emp_cnty"
+#scenario.name <- "LUVit_emp_cnty_adj_mig"
+#scenario.name <- "higher_amenity" 
 
+remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
 
 # names of the individual sheets that we want to include in the resulting dataset
 # and the corresponding value in the "Main Measure" column 

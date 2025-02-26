@@ -44,7 +44,7 @@ hh_pop      <- get_acs_recs(geography="county",                                #
                             years=c(2020,2023), 
                             acs.type="acs5")  %>% setDT() %>%
     .[, subvar:=as.integer(stringr::str_extract(variable,"(?<=_)\\d+$"))] %>%    
-    .[between(subvar, 2, 44)]                                                    # Keep only total and topline GQ
+    .[subvar %in% c(2:11, 35:44)]                                                    # Keep only total and topline GQ
 hh_pop[between(subvar, 35, 44), estimate:=estimate * -1]                       # HH pop is total - GQ
 hh_pop %<>% sum_by_age()
 
@@ -53,10 +53,3 @@ total_pop   <- get_acs_recs(geography="county",                                #
                             years=c(2020,2023), 
                             acs.type="acs5") %>% sum_by_age()
 
-hhpopwa <- tidycensus::get_acs(state = "Washington", geography = "state", 
-                           year = 2020, survey = "acs5", 
-                           table = "B26101")  
-hhpopwa2 <- hhpopwa %>% setDT() %>%
-    .[, subvar:=as.integer(stringr::str_extract(variable,"(?<=_)\\d+$"))] %>%    
-    .[subvar %in% c(2:11, 35:44)]  %>% psrccensus:::label_acs_variables("B26101", 2020, "acs5")
-hhpopwa2 %<>% sum_by_age()

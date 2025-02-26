@@ -6,20 +6,22 @@ source("tools.R")
 # list of scenario names (can be anything) and the corresponding Excel files 
 # containing REMI results, exported directly from REMI
 scenario.list <- list(
+    "REMI v3.2" = "Dashboard_Indicators_REMI3.2base.xlsx",
     LUVit_pop = "Dashboard_Indicators_LUVitPop.xlsx",
     LUVit_emp_cnty = "Dashboard_Indicators_LUVitEmpSecCnty.xlsx",
     LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx"
 )
 # directory of the REMI excel files
-data.dir <- "~/T/2025Q1/Hana/REMI"
-#data.dir <- "."
+#data.dir <- "~/T/2025Q1/Hana/REMI"
+data.dir <- "."
 
 # which scenario from the list above to process
 scenario.name <- "LUVit_pop"
 scenario.name <- "LUVit_emp_cnty"
 scenario.name <- "LUVit_emp_cnty_adj_mig"
 scenario.name <- "higher_amenity" 
+scenario.name <- "REMI v3.2"
 
 remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
 

@@ -106,7 +106,8 @@ dtype.choice <- c("Counts" = "total",
                   "Percent Annual Change" = "percent_delta",
                   "5y moving average" = "moving_average"
                  )
-tooltip.digits <- c(total = 0, delta = 1, percent_delta = 2, moving_average = 2) 
+tooltip.digits <- c(total = 0, delta = 1, percent_delta = 2, moving_average = 2, 
+                    functions = 3) 
 
 # photo list
 psrc_photos <- list.files("www", "*.jpg")

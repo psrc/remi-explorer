@@ -37,9 +37,22 @@ function(input, output, session) {
       v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
   })
   
+  variablesFX <- reactive({
+      t <- variables.lu[category %in% input$category_fctX, ]
+      v.raw <- as.list(unique(t$variable))
+      v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
+  })
+  
+  variablesFY <- reactive({
+      t <- variables.lu[category %in% input$category_fctY, ]
+      v.raw <- as.list(unique(t$variable))
+      v.list <- setNames(v.raw, as.list(unique(t$variable_name)))
+  })
+  
   geography <- reactive({input$tabset})
   geography_pyr <- reactive({input$tabset_pyr})
   geography_scatter <- reactive({input$tabset_scatter})
+  geography_fct <- reactive({input$tabset_fct})
   
   output$var <- renderUI({
     div(style = "width: 100%; float:left;",
@@ -68,6 +81,24 @@ function(input, output, session) {
     )
   })
 
+  output$var_fctX <- renderUI({
+      div(style = "width: 100%; float:left;",
+          selectInput('variable_fctX',
+                      label = 'Variable for X',
+                      choices = variablesFX(),
+                      selected = variablesFX()[1])
+      )
+  })
+  
+  output$var_fctY <- renderUI({
+      div(style = "width: 100%; float:left;",
+          selectInput('variable_fctY',
+                      label = 'Variable for Y',
+                      choices = variablesFY(),
+                      selected = variablesFY()[1])
+      )
+  })
+  
   output$yearspanTS <- renderUI({
       minyear <- alldata.long[, min(year)]
       maxyear <- alldata.long[, max(year)]
@@ -80,6 +111,14 @@ function(input, output, session) {
       minyear <- alldata.long[, min(year)]
       maxyear <- alldata.long[, max(year)]
       sliderInput('yearspanSc', '', sep="",
+                  min=minyear, 
+                  max=maxyear, value = c(minyear, maxyear))
+  })
+  
+  output$yearspanFct <- renderUI({
+      minyear <- alldata.long[, min(year)]
+      maxyear <- alldata.long[, max(year)]
+      sliderInput('yearspanF', '', sep="",
                   min=minyear, 
                   max=maxyear, value = c(minyear, maxyear))
   })
@@ -393,4 +432,83 @@ function(input, output, session) {
     #             nrows = 2, shareX = TRUE, margin = 0.07)
     # })
     
+    get_fct_data <- function(catx, varx, caty, vary, fct, geo, source, scenario, 
+                             yearspan = NULL, add_tooltip = TRUE){
+        X <- get_data(catx, varx, geo, "total", source, scenario, yearspan, add_tooltip = FALSE)
+        Y <- get_data(caty, vary, geo, "total", source, scenario, yearspan, add_tooltip = FALSE)
+        combine_data_via_fct(X, Y, fct, add_tooltip)
+    }
+    
+    combine_data_via_fct <- function(datx, daty, fct, add_tooltip = TRUE){
+        if(is.null(datx) || is.null(daty)) return(NULL)
+        data <- merge(datx[, .(Source, year, X = value)], 
+                      daty[, .(Source, year, Y = value)], by = c("Source", "year"))
+        data[, value := eval(parse(text = fct))]
+        if(add_tooltip)
+            data$tooltip <- paste0(data$Source, " (", data$year, "): ", 
+                               prettyNum(formattable::digits(round(data$value, tooltip.digits["functions"]), 
+                                                             digits=tooltip.digits["functions"]), 
+                                         big.mark = ","))
+        data
+    }
+    
+    get_table_varFX <- reactive({
+        get_data(input$category_fctX, input$variable_fctX, geography_fct(), 
+                 "total", input$datasource_fct, input$scenario_fct, input$yearspanF,
+                 add_tooltip = FALSE)
+    })
+    
+    get_table_varFY <- reactive({
+        get_data(input$category_fctY, input$variable_fctY, geography_fct(), 
+                 "total", input$datasource_fct, input$scenario_fct, input$yearspanF,
+                 add_tooltip = FALSE)
+    })
+    get_table_fct <- reactive({
+        datx <- get_table_varFX()
+        daty <- get_table_varFY()
+        combine_data_via_fct(datx, daty, input$function_input)
+    })
+
+    output$plot_region_fct <- renderPlotly({
+        plot_trends(get_table_fct(), input$function_input)
+    })
+    output$plot_king_fct <- renderPlotly({
+        plot_trends(get_table_fct(), input$function_input)
+    })
+    output$plot_kitsap_fct <- renderPlotly({
+        plot_trends(get_table_fct(), input$function_input)
+    })
+    output$plot_pierce_fct <- renderPlotly({
+        plot_trends(get_table_fct(), input$function_input)
+    })
+    output$plot_snohomish_fct <- renderPlotly({
+        plot_trends(get_table_fct(), input$function_input)
+    })
+    output$plot_4counties_fct <- renderPlotly({
+        f1 <- plot_trends(get_fct_data(input$category_fctX, input$variable_fctX, 
+                                       input$category_fctY, input$variable_fctY,
+                                       input$function_input, "King", input$datasource_fct, 
+                                       input$scenario_fct, input$yearspanF), 
+                          "King", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+        f2 <- plot_trends(get_fct_data(input$category_fctX, input$variable_fctX, 
+                                       input$category_fctY, input$variable_fctY,
+                                       input$function_input, "Kitsap", input$datasource_fct, 
+                                       input$scenario_fct, input$yearspanF), 
+                          "Kitsap", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+        f3 <- plot_trends(get_fct_data(input$category_fctX, input$variable_fctX, 
+                                                input$category_fctY, input$variable_fctY,
+                                                input$function_input, "Pierce", input$datasource_fct, 
+                                                input$scenario_fct, input$yearspanF), 
+                          "Pierce", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+        f4 <- plot_trends(get_fct_data(input$category_fctX, input$variable_fctX, 
+                                       input$category_fctY, input$variable_fctY,
+                                       input$function_input, "Snohomish", input$datasource_fct, 
+                                       input$scenario_fct, input$yearspanF), 
+                          "Snohomish", line_width = 0.3, point_size = 0.5, breaks.by = 10)
+        subplot(f1, 
+                style(f2, showlegend = FALSE), 
+                style(f3, showlegend = FALSE),
+                style(f4, showlegend = FALSE),
+                nrows = 2, shareX = TRUE, margin = 0.07)
+    })
 }

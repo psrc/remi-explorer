@@ -1,3 +1,4 @@
+# Add indicators of Households and Household Population for indicator/scenario files
 library(data.table)
 
 source("tools.R")
@@ -46,10 +47,9 @@ if(ind %in% indicators & !ind %in% alldat[, `Detailed Measure`]){
     # commerce method for deriving households
     acsdata <- fread("acs_hhpop_by_age.csv")[year == acs.year]
     if(is.null(gqest)) fread(data.file)
-    #stop("")
     hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
                                         Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
-                             hhpop = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Household Population" & 
+                             hhpopdt = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Household Population" & 
                                                 Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
                              acs = acsdata, gqest = gqest, 
                              base.year = data.year, target.year = 2050)

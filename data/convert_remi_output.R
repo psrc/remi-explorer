@@ -13,8 +13,8 @@ scenario.list <- list(
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx"
 )
 # directory of the REMI excel files
-#data.dir <- "~/T/2025Q1/Hana/REMI"
-data.dir <- "."
+data.dir <- "~/T/2025Q1/Hana/REMI"
+#data.dir <- "."
 
 # which scenario from the list above to process
 scenario.name <- "LUVit_pop"
@@ -130,26 +130,26 @@ alldat[is.na(Gender), Gender := "Total"]
 # there seems to be some duplicates, so remove them
 alldat <- alldat[!duplicated(alldat, by = c("Source", "Main Measure", "Detailed Measure", "Region", "Age", "Race", "Gender", "Units", "year"))]
 
+acs.year <- 2023
 gqest <- NULL
 if(!"Household Population" %in% alldat[, `Detailed Measure`]){
     # derive HH pop
-    #gqest <- read_xlsx("gq.xlsx", skip = 1)
-    gqest <- fread("census2020_hhpop.csv")
+    gqest <- fread("acs5_hhpop.csv")
     hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
                            Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
-                gqest = gqest, yr = 2020)
+                gqest = gqest, yr = acs.year)
     alldat <- rbind(alldat, hhpop)
 }
 if(!"Households" %in% alldat[, `Detailed Measure`]){
     # commerce method for deriving households
-    acsdata <- fread("acs_hhpop_by_age.csv")[year == 2020]
-    if(is.null(gqest)) fread("census2020_hhpop.csv")
+    acsdata <- fread("acs_hhpop_by_age.csv")[year == acs.year]
+    if(is.null(gqest)) fread("acs5_hhpop.csv")
     hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
                                         Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
+                             hhpopdt = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Household Population" & 
+                                                Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
                              acs = acsdata, gqest = gqest, 
-                             template = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
-                                        Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
-                             base.year = 2020, target.year = 2050)
+                             base.year = acs.year, target.year = 2050)
     alldat <- rbind(alldat, hh)
 }
 

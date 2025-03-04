@@ -1,56 +1,86 @@
 library(psrccensus)
-library(stringr)
-library(dplyr)
 library(data.table)
 library(magrittr)
 
-age_categories <- c("Under 5 years",  "5 to 9 years",  "10 to 14 years", "15 to 24 years", 
-                    "25 to 34 years", "35 to 44 years", "45 to 54 years", "55 to 59 years", 
-                    "60 to 64 years", "65 to 74 years", "75 to 84 years", "85 years and over")
+counties <- c("King", "Kitsap", "Pierce", "Snohomish", "Region") # for ordering rows
+# census
+cgq <- get_decennial_recs(geography="county", variables="P5_001N", 
+                          sumfile = "pl", years=2020)  %>% setDT()       # Group quarters
+cpop <- get_decennial_recs(geography="county", variables="DP1_0001C", 
+                           sumfile = "dp", years=2020)  %>% setDT()      # Population
+chh <- get_decennial_recs(geography="county", variables="DP1_0158C", 
+                          sumfile = "dp", years=2020)  %>% setDT()        # Households
 
-safe_rgx_extract <- function(var, rgx){
-  val <- if_else(str_detect(var, rgx), str_replace(str_extract(var, rgx), rgx, "\\1"), "")
-}
+final_census <- merge(merge(
+                  cpop[, .(year, NAME, Pop = value)],
+                  chh[, .(year, NAME, HH = value)], by = c("year", "NAME")),
+                cgq[, .(year, NAME, GQ = value)], by = c("year", "NAME")
+                )
+final_census[, HHpop := Pop - GQ][, name := factor(gsub(" County, Washington", "", NAME), counties)][, NAME := NULL]
+final_census <- final_census[order(name)]
+fwrite(final_census, file = "census2020_hhpop.csv")
 
-# Create an age category lookup table
-age_lookup <- suppressWarnings(data.table(
-    age_label=age_categories,
-    age_min=coalesce(as.integer(safe_rgx_extract(age_categories, "(^\\d+)")), 0),
-    age_max=coalesce(as.integer(safe_rgx_extract(age_categories, "(\\d+) years$")), 120)
-))
+# 5-year ACS
+total_pop   <- get_acs_recs(geography="county",                         # Total population
+                            table.names="B01003", 
+                            years=c(2020, 2023), 
+                            acs.type="acs5")   %>% setDT() 
 
-# Helper function
-sum_by_age <- function(dt){
-  dtx <- setDT(dt) %>% .[grepl('years', label)] %>%
-      .[, `:=`(age =str_extract(label, "(?<=!!)[\\w ]+$"))]                    # Separate age from label components]
-  dtx[grepl("^Under ", age),  `:=`(age1=as.integer(safe_rgx_extract(age, "(?:Under )(\\d+)")) -1,
-                                   age2=as.integer(safe_rgx_extract(age, "(?:Under )(\\d+)")) -1)]
-  dtx[!grepl("^Under ", age), `:=`(age1=as.integer(safe_rgx_extract(age, "(\\d+)")),
-                                   age2=as.integer(safe_rgx_extract(age, "(\\d+)(?: years)?(?: and over)?$")))] 
-  dtx[age_lookup, age:=age_label, on=.(age1 >= age_min, age2 <= age_max)] %>%  # Recode using standard age categories
-      setnames("name","county") 
-  
-  rs <- dtx[!is.na(age), 
-            .(sum_estimate=sum(estimate), 
-              sum_moe=tidycensus::moe_sum(moe, estimate, na.rm=TRUE)),         # Summarize
-            by=c("year", "county", "age")]
-} 
-
-householder <- get_acs_recs(geography="county",                                # Householders by age
-                            table.names="B25007", 
+hh   <- get_acs_recs(geography="county",                                # Households
+                            table.names="B25003", 
                             years=c(2020,2023), 
-                            acs.type="acs5") %>% sum_by_age()
+                            acs.type="acs5")   %>% setDT()
 
-hh_pop      <- get_acs_recs(geography="county",                                # All household population by age
-                            table.names="B26101",
-                            years=c(2020,2023), 
-                            acs.type="acs5")  %>% setDT() %>%
-    .[, subvar:=as.integer(stringr::str_extract(variable,"(?<=_)\\d+$"))] %>%    
-    .[subvar %in% c(2:11, 35:44)]                                              # Keep only total and topline GQ
-hh_pop[between(subvar, 35, 44), estimate:=estimate * -1]                       # HH pop is total - GQ
-hh_pop %<>% sum_by_age()
+hhpop <- get_acs_recs(geography="county",                                # Household population
+                      table.names="B25008", 
+                      years=c(2020,2023), 
+                      acs.type="acs5")   %>% setDT()
 
-total_pop   <- get_acs_recs(geography="county",                                # Total population by age
-                            table.names="B01001", 
-                            years=c(2020,2023), 
-                            acs.type="acs5") %>% sum_by_age()
+# gq <- get_acs_recs(geography="county",                                # Group quarters
+#                       table.names="B26001", 
+#                       years=c(2020,2023), 
+#                       acs.type="acs5")   %>% setDT()
+
+final5 <- merge(merge(
+                  total_pop[, .(year, name, Pop = estimate)],
+                  hh[label == "Estimate!!Total:", .(year, name, HH = estimate)], 
+                by = c("year", "name")),
+                  hhpop[label == "Estimate!!Total:", .(year, name, HHpop = estimate)],
+               by = c("year", "name"))
+final5[, GQ := Pop - HHpop][, name := factor(gsub(" County", "", name), counties)]
+final5 <- final5[order(name)]
+fwrite(final5, file = "acs5_hhpop.csv")
+
+# 1-year acs
+total_pop   <- get_acs_recs(geography="county",                         # Total population
+                            table.names="B01003", 
+                            years=c(2023), 
+                            acs.type="acs1")   %>% setDT() 
+
+hh   <- get_acs_recs(geography="county",                                # Households
+                     table.names="B25003", 
+                     years=c(2023), 
+                     acs.type="acs1")   %>% setDT()
+
+hhpop <- get_acs_recs(geography="county",                                # Household population
+                      table.names="B25008", 
+                      years=c(2023), 
+                      acs.type="acs1")   %>% setDT()
+
+final1 <- merge(merge(
+            total_pop[, .(year, name, Pop = estimate)],
+            hh[label == "Estimate!!Total:", .(year, name, HH = estimate)], 
+        by = c("year", "name")),
+            hhpop[label == "Estimate!!Total:", .(year, name, HHpop = estimate)],
+            by = c("year", "name"))
+final1[, GQ := Pop - HHpop][, name := factor(gsub(" County", "", name), counties)]
+final1 <- final1[order(name)]
+
+fwrite(final1, file = "acs1_hhpop.csv")
+
+tmp <- merge(census[, .(name, `2020CensusHHsize` = hhsize, `2020CensusGQ2Pop` = gq_pop)], 
+             final5[year == 2023, .(name, `2023ACSHHsize` = hhsize, `2023ACSGQ2Pop` = gq_pop)], 
+             by = "name")
+tmp[, name := factor(name, counties)]
+tmp <- tmp[order(counties)]
+setcolorder(tmp, c(1, 2, 4, 3, 5))

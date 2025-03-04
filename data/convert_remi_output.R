@@ -21,7 +21,7 @@ scenario.name <- "LUVit_pop"
 scenario.name <- "LUVit_emp_cnty"
 scenario.name <- "LUVit_emp_cnty_adj_mig"
 scenario.name <- "higher_amenity" 
-scenario.name <- "REMI v3.2"
+#scenario.name <- "REMI v3.2"
 
 remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
 
@@ -130,12 +130,28 @@ alldat[is.na(Gender), Gender := "Total"]
 # there seems to be some duplicates, so remove them
 alldat <- alldat[!duplicated(alldat, by = c("Source", "Main Measure", "Detailed Measure", "Region", "Age", "Race", "Gender", "Units", "year"))]
 
-# derive HH pop
-gqest <- read_xlsx("gq.xlsx", skip = 1)
-hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
+gqest <- NULL
+if(!"Household Population" %in% alldat[, `Detailed Measure`]){
+    # derive HH pop
+    #gqest <- read_xlsx("gq.xlsx", skip = 1)
+    gqest <- fread("census2020_hhpop.csv")
+    hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
                            Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
-                gqest = data.table(gqest), year = 2024)
-alldat <- rbind(alldat, hhpop)
+                gqest = gqest, yr = 2020)
+    alldat <- rbind(alldat, hhpop)
+}
+if(!"Households" %in% alldat[, `Detailed Measure`]){
+    # commerce method for deriving households
+    acsdata <- fread("acs_hhpop_by_age.csv")[year == 2023]
+    if(is.null(gqest)) fread("census2020_hhpop.csv")
+    hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
+                                        Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
+                             acs = acsdata, gqest = gqest, 
+                             template = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
+                                        Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
+                             base.year = 2022, target.year = 2050)
+    alldat <- rbind(alldat, hh)
+}
 
 # convert to wide format
 alldatw <- dcast(alldat, Source + `Main Measure` + `Detailed Measure` + Region + Age + Race + Gender + Units ~ year,

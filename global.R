@@ -36,6 +36,8 @@ setnames(alldata, c("Main Measure", "Detailed Measure"), c("category", "variable
 
 alldata[startsWith(Age, "All"), Age := "All Ages"] # consolidate Age labels for all ages
 
+alldata[category == "Households", category := "Population"]
+
 alldata <- alldata[!duplicated(alldata, by = c("Source", "category", "variable", "Region", "Age", "Race", "Gender", "Units"))]
 
 alldata.long <- melt(alldata[, c("Source", "category", "variable", "Region", "Age", "Race", "Units", "Gender",

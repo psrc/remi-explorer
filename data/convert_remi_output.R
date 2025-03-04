@@ -142,14 +142,14 @@ if(!"Household Population" %in% alldat[, `Detailed Measure`]){
 }
 if(!"Households" %in% alldat[, `Detailed Measure`]){
     # commerce method for deriving households
-    acsdata <- fread("acs_hhpop_by_age.csv")[year == 2023]
+    acsdata <- fread("acs_hhpop_by_age.csv")[year == 2020]
     if(is.null(gqest)) fread("census2020_hhpop.csv")
     hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
                                         Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
                              acs = acsdata, gqest = gqest, 
                              template = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
                                         Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
-                             base.year = 2022, target.year = 2050)
+                             base.year = 2020, target.year = 2050)
     alldat <- rbind(alldat, hh)
 }
 

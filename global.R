@@ -93,7 +93,14 @@ variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment
 
 
 # reorder variables
-variables.lu <- rbind(variables.lu[category == "Population"],
+# Pop ordering
+r <- 1
+for(var in c("Total Population", "Household Population", "Households")){
+    variables.lu[variable == var, rank := r]
+    r <- r+1
+}
+variables.lu[is.na(rank), rank := r:(sum(is.na(rank))+r-1)]
+variables.lu <- rbind(variables.lu[category == "Population"][order(rank)],
                       variables.lu[category == "Employment"][order(variable)],
                       variables.lu[category == "Labor Force"]
                       )

@@ -17,7 +17,8 @@ compute.hhpop <- function(dt, gqest, yr = 2020){
     return(dt)   
 }
 
-compute.households <- function(dt, acs, gqest, template, base.year = 2022, target.year = NULL){
+compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, target.year = NULL, acs.year = 2020){
+    # implements Exhibit 19 from https://deptofcommerce.app.box.com/s/chqj8wk1esnnranyb3ewzgd4w0e5ve3a
     if(is.null(target.year)) target.year <- max(as.integer(dt$year))
     # create a table of age groups that should be summed to the desired age categories
     agesdt <- cbind(acs[, age], acs[, tstrsplit(age, "-")])
@@ -33,21 +34,26 @@ compute.households <- function(dt, acs, gqest, template, base.year = 2022, targe
     for(a in names(age.groups))
         age.categories <- rbind(age.categories, data.table(Age = age.groups[[a]], age = a))
     
-    # assign the broader age groups to dt                        
+    # assign the broader age groups to dt             
     dt[, Age := gsub("Ages ", "", Age)]
     dt[age.categories, age := i.age, on = "Age"]
+    # Steps F, G
     hhpop <- merge(dt[!is.na(age), .(value = sum(value)), by = .(Region, age, year)], 
                    acs[, .(age, ratio_hhpop_pop = HHpop/Pop, ratio_hher_hhpop = householders / HHpop)], 
                    by = "age")
+    # Steps H, I
     hhpop[, hhpop := value * ratio_hhpop_pop][, hhmod := hhpop * ratio_hher_hhpop]
-    hhsize <- hhpop[, .(hhpop, hhsizemod = sum(hhpop)/sum(hhmod)), by = .(Region, year)]
+    # Steps J, K
+    hhsize <- hhpop[, .(hhpop = sum(hhpop), hhsizemod = sum(hhpop)/sum(hhmod)), by = .(Region, year)]
+    # Step L
     hhsize[hhsize[year == base.year], hhsize_ratio := hhsizemod / i.hhsizemod, on = "Region"]
 
     # get the base HH size
-    gq <- gqest[year == 2020]
+    gq <- gqest[year == data.year]
     setnames(gq, "name", "Region")
-    gq[, hhsize := (Pop - GQ)/HH]
+    gq[, hhsize := (Pop - GQ)/HH][Region != "Region", Region := paste(Region, "County")]
+    # Step M
     hhsize[gq, hhsize := i.hhsize * hhsize_ratio, on = "Region"]
-    template[hhsize, `:=`(value = i.hhpop / i.hhsize, `Detailed Measure` = "Households"), on = c("Region", "year")]
-    return(template)
+    hhpopdt[hhsize, `:=`(value = value / i.hhsize, `Detailed Measure` = "Households"), on = c("Region", "year")]
+    return(hhpopdt)
 }

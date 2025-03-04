@@ -13,8 +13,8 @@ scenario.list <- list(
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx"
 )
 # directory of the REMI excel files
-data.dir <- "~/T/2025Q1/Hana/REMI"
-#data.dir <- "."
+#data.dir <- "~/T/2025Q1/Hana/REMI"
+data.dir <- "."
 
 # which scenario from the list above to process
 scenario.name <- "LUVit_pop"

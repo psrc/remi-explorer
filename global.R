@@ -70,7 +70,7 @@ alldata.long[Source == "LUV-it", Source := "LUVit"]
 alldata.long[Source == "ECO_Model_REF_2018", Source := "ECO Model 2018"]
 sources <- unique(alldata.long[, Source])
 
-ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI") & ! sources %in% remi.scenarios])), "OFM 2022", "LUVit", "ECO Model 2018")
+ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI") & ! sources %in% remi.scenarios])), "OFM 2022", "ECO Model 2018", "LUVit")
 ordered.sources.for.pyr <- ordered.sources[!ordered.sources %in% "LUVit"]
 alldata.long[, Source := factor(Source, levels = c(ordered.sources, remi.scenarios))]
 

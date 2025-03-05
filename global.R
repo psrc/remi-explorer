@@ -13,6 +13,7 @@ alldata <- rbind(fread("data/ofm.csv", header = TRUE),
                  fread("data/remi_v31.csv", header = TRUE), 
                  fread("data/remi_v32.csv", header = TRUE), 
                  fread("data/luvit.csv", header = TRUE), 
+                 fread("data/ECO_Model_REF_2018.csv", header = TRUE),
                  fill = TRUE)
 
 # extract scenarios
@@ -66,8 +67,10 @@ for(cnty in c("King", "Pierce", "Snohomish", "Kitsap"))
     alldata.long[startsWith(Region, cnty), Region := cnty] 
 alldata.long <- alldata.long[!is.na(value)]
 alldata.long[Source == "LUV-it", Source := "LUVit"]
+alldata.long[Source == "ECO_Model_REF_2018", Source := "ECO Model 2018"]
 sources <- unique(alldata.long[, Source])
-ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI") & ! sources %in% remi.scenarios])), "OFM 2022", "LUVit")
+
+ordered.sources <- c(rev(sort(sources[startsWith(sources, "REMI") & ! sources %in% remi.scenarios])), "OFM 2022", "LUVit", "ECO Model 2018")
 ordered.sources.for.pyr <- ordered.sources[!ordered.sources %in% "LUVit"]
 alldata.long[, Source := factor(Source, levels = c(ordered.sources, remi.scenarios))]
 

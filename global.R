@@ -77,6 +77,16 @@ alldata.long[, Source := factor(Source, levels = c(ordered.sources, remi.scenari
 
 alldata.long[, Age := gsub("Ages ", "", Age)]
 
+# add aggregated age categories
+# 0-14, 15-64
+alldata.long[, addage := ifelse(Age %in% c("0-4", "5-9", "10-14"), 1, ifelse(Age %in% c("15-19", "20-64"), 2, 0))]
+add.alldata.long <- alldata.long[, .(value = sum(value), .N), by = c("Source", "category", "Region", "addage", "Race", "Units", "Gender", "year")][
+    addage > 0 & ((addage == 1 & N == 3) | (addage == 2 & N == 2))][, N := NULL]
+add.alldata.long[addage == 1, `:=`(variable = "Ages 0-14", Age = "0-14")]
+add.alldata.long[addage == 2, `:=`(variable = "Ages 15-64", Age = "15-64")]
+alldata.long <- rbind(alldata.long, add.alldata.long)[, addage := NULL]
+
+# pyramid data
 pyr.index.oag <- with(alldata.long, Gender %in% c("Male", "Female")  & ! startsWith(Age, "All")  & ! startsWith(Age, "Total"))
 oag.index <- with(alldata.long, pyr.index.oag & grepl('+', Age, fixed = TRUE))
 pyr.index <- pyr.index.oag & with(alldata.long, grepl('-', Age))
@@ -107,8 +117,8 @@ for(var in c("Total Population", "Households", "Household Population")){
 }
 variables.lu[is.na(rank), rank := r:(sum(is.na(rank))+r-1)]
 variables.lu <- rbind(variables.lu[category == "Population"][order(rank)],
-                      variables.lu[category == "Households"][order(rank)],
                       variables.lu[category == "Employment"][order(variable)],
+                      variables.lu[category == "Households"][order(rank)],
                       variables.lu[category == "Labor Force"]
                       )
 

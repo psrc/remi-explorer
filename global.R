@@ -37,7 +37,7 @@ setnames(alldata, c("Main Measure", "Detailed Measure"), c("category", "variable
 
 alldata[startsWith(Age, "All"), Age := "All Ages"] # consolidate Age labels for all ages
 
-alldata[category == "Households", category := "Population"]
+alldata[category == "Population" & startsWith(variable, "Household"), category := "Households"]
 
 alldata <- alldata[!duplicated(alldata, by = c("Source", "category", "variable", "Region", "Age", "Race", "Gender", "Units"))]
 
@@ -54,8 +54,9 @@ alldata.long <- rbind(alldata.long, alldata.long[has_all_races == 0, .(Race = "A
 
 alldata.long <- alldata.long[(startsWith(Race, "All Races") | is.na(Race)) & 
                                  (category == "Population" & (variable %in% c("Total Population", "Total Migrants", "Retired Migrants",
-                                                                              "International Migrants", "Economic Migrants", "Special Populations Migration",
-                                                                              "Household Population", "Households") #| 
+                                                                              "International Migrants", "Economic Migrants", "Special Populations Migration"#,
+                                                                              #"Household Population", "Households"
+                                                                              ) #| 
                                                                   #grepl("^Retired Migrants$|^International Migrants$|^Economic Migrants|^Special Populations Migration", variable)
                                                               ) | 
                                       category != "Population")]
@@ -93,19 +94,20 @@ all.xvalues <- seq(1980, max(alldata.long$year), by = 5)
 alldata.trends[category == "Employment", variable := gsub("REMI", "REMI (BEA)", variable)]
 
 # extract variable names
-variables.lu <- unique(alldata.trends[category %in%  c("Population", "Employment", "Labor Force"), 
+variables.lu <- unique(alldata.trends[category %in%  c("Population", "Households", "Employment", "Labor Force"), 
                                .(category, variable, variable_name = `variable`)])
 
 
 # reorder variables
 # Pop ordering
 r <- 1
-for(var in c("Total Population", "Household Population", "Households")){
+for(var in c("Total Population", "Households", "Household Population")){
     variables.lu[variable == var, rank := r]
     r <- r+1
 }
 variables.lu[is.na(rank), rank := r:(sum(is.na(rank))+r-1)]
 variables.lu <- rbind(variables.lu[category == "Population"][order(rank)],
+                      variables.lu[category == "Households"][order(rank)],
                       variables.lu[category == "Employment"][order(variable)],
                       variables.lu[category == "Labor Force"]
                       )

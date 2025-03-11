@@ -21,7 +21,8 @@ compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, target
     # implements Exhibit 19 from https://deptofcommerce.app.box.com/s/chqj8wk1esnnranyb3ewzgd4w0e5ve3a
     if(is.null(target.year)) target.year <- max(as.integer(dt$year))
     # create a table of age groups that should be summed to the desired age categories
-    agesdt <- cbind(acs[, age], acs[, tstrsplit(age, "-")])
+    agesdt <- unique(acs[, .(age)])
+    agesdt <- cbind(agesdt, agesdt[, tstrsplit(age, "-")])
     colnames(agesdt) <- c("age", "start_age", "end_age")
     agesdt[start_age == "85+", `:=`(start_age = 85, end_age = 200)][
         , `:=`(start_age = as.integer(start_age), end_age = as.integer(end_age))]
@@ -38,9 +39,13 @@ compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, target
     dt[, Age := gsub("Ages ", "", Age)]
     dt[age.categories, age := i.age, on = "Age"]
     # Steps F, G
-    hhpop <- merge(dt[!is.na(age), .(value = sum(value)), by = .(Region, age, year)], 
-                   acs[, .(age, ratio_hhpop_pop = HHpop/Pop, ratio_hher_hhpop = householders / HHpop)], 
+    hhpop <- merge(dt[!is.na(age), .(value = sum(value)), by = .(Region, age, Gender, year)], 
+                   acs[, .(age, Gender, ratio_hhpop_pop = HHpop/Pop)], 
+                   by = c("age", "Gender"))
+    hhpop <- merge(hhpop, acs[Gender == "Total", 
+                              .(age, ratio_hher_hhpop = householders / HHpop)],
                    by = "age")
+                   
     # Steps H, I
     hhpop[, hhpop := value * ratio_hhpop_pop][, hhmod := hhpop * ratio_hher_hhpop]
     # Steps J, K

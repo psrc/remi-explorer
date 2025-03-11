@@ -6,6 +6,10 @@ source("tools.R")
 ind_input_file <- "ofm.csv" 
 ind_input_file <- "remi_v32.csv"
 ind_input_file <- "remi_scenario_LUVit_pop.csv"
+#ind_input_file <- "ECO_Model_REF_2018.csv"
+
+overwrite.existing.indicator <- TRUE
+by.gender <- TRUE
 
 data.from.census <- FALSE
 data.year <- 2023
@@ -33,7 +37,10 @@ alldat <- melt(alldatw, id.vars = c("Source", "Main Measure", "Detailed Measure"
                variable.name = "year", variable.factor = FALSE)
 
 ind <- "Household Population"
-if(ind %in% indicators & !ind %in% alldat[, `Detailed Measure`]){
+if(ind %in% indicators && overwrite.existing.indicator)
+    alldat <- alldat[`Detailed Measure` != ind]
+
+if(ind %in% indicators && !ind %in% alldat[, `Detailed Measure`]){
     # derive HH pop
     gqest <- fread(data.file)
     hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
@@ -43,16 +50,23 @@ if(ind %in% indicators & !ind %in% alldat[, `Detailed Measure`]){
 }
 
 ind <- "Households"
+if(ind %in% indicators && overwrite.existing.indicator)
+    alldat <- alldat[`Detailed Measure` != ind]
+
 if(ind %in% indicators & !ind %in% alldat[, `Detailed Measure`]){
     # commerce method for deriving households
     acsdata <- fread("acs_hhpop_by_age.csv")[year == acs.year]
     if(is.null(gqest)) fread(data.file)
-    hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
-                                        Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
+    dt <- alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & Race == "All Races" & !startsWith(Age, "All Ages")]
+    if(by.gender)
+        dt <- dt[Gender != "Total"]
+    else dt <- dt[Gender == "Total"]
+    hh <- compute.households(dt, 
                              hhpopdt = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Household Population" & 
                                                 Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
                              acs = acsdata, gqest = gqest, 
                              base.year = data.year, target.year = 2050)
+    stop("")
     alldat <- rbind(alldat, hh)
 }
 # there seems to be some duplicates, so remove them

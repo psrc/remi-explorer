@@ -29,7 +29,7 @@ assign_age_range <- function(dt){
 }
 
 # Helper function
-sum_by_age <- function(dt){
+sum_by_age <- function(dt, add.by = c()){
     dtx <- setDT(dt) %>% .[grepl('years', label)] %>%
         .[, `:=`(age =str_extract(label, "(?<=!!)[\\w ]+$"))]                    # Separate age from label components]
     assign_age_range(dtx)
@@ -38,7 +38,7 @@ sum_by_age <- function(dt){
     dtx[!is.na(age), 
               .(sum_estimate=sum(estimate), 
                 sum_moe=tidycensus::moe_sum(moe, estimate, na.rm=TRUE)),         # Summarize
-              by=c("year", "age")]
+              by=c("year", "age", add.by)]
 } 
 
 householder <- hh_pop <- tot_pop <- NULL
@@ -50,29 +50,35 @@ for(yr in c(2020, 2023)){
         psrccensus:::label_acs_variables("B25007", yr, "acs5") %>% 
             setDT() %>% .[, year := yr]
     )
-    hh_pop <- rbind(hh_pop,
-                    tidycensus::get_acs(state = "Washington", geography = "state", 
-                                        year = yr, survey = "acs5", 
-                                        table = "B26101", cache_table = TRUE)  %>% 
-                        psrccensus:::label_acs_variables("BB26101", yr, "acs5") %>% setDT() %>%
-                        .[, subvar:=as.integer(stringr::str_extract(variable,"(?<=_)\\d+$"))] %>%    
-                        .[subvar %in% c(2:11, 35:44)] %>% .[, year := yr]
+    this_hh_pop <- tidycensus::get_acs(state = "Washington", geography = "state", 
+                        year = yr, survey = "acs5", 
+                        table = "B26101", cache_table = TRUE)  %>% 
+                    psrccensus:::label_acs_variables("BB26101", yr, "acs5") %>% setDT() %>%
+                    .[, subvar:=as.integer(stringr::str_extract(variable,"(?<=_)\\d+$"))] 
+    hh_pop <- rbind(hh_pop, 
+                    rbind(this_hh_pop %>% .[subvar %in% c(13:22, 46:55)] %>% .[, Gender := "Male"],
+                          this_hh_pop %>% .[subvar %in% c(24:33, 57:66)] %>% .[, Gender := "Female"]
+                         ) %>% .[, year := yr]
                     )
 }
 # sum for selected age groups
 householder_sum <- sum_by_age(householder)
-hh_pop[between(subvar, 35, 44), estimate:=estimate * -1]        # HH pop is total - GQ
-hh_pop_sum <- sum_by_age(hh_pop)
-tot_pop_sum <- sum_by_age(hh_pop[estimate > 0])
+hh_pop[subvar >= 46, estimate:=estimate * -1]        # HH pop is total - GQ
+hh_pop_sum <- sum_by_age(hh_pop, add.by = "Gender")
+hh_pop_sum <- rbind(hh_pop_sum, hh_pop_sum[, .(sum_estimate = sum(sum_estimate), sum_moe = NA, Gender = "Total"), 
+                                           by = c("year", "age")])
+tot_pop_sum <- sum_by_age(hh_pop[estimate > 0], add.by = "Gender")
+tot_pop_sum <- rbind(tot_pop_sum, tot_pop_sum[, .(sum_estimate = sum(sum_estimate), sum_moe = NA, Gender = "Total"), 
+                                           by = c("year", "age")])
 
 # assemble final table
-output_table <- merge(merge(householder_sum[, .(year, age, householders = sum_estimate)],
-                            hh_pop_sum[, .(year, age, HHpop = sum_estimate)],
-                                by = c("year", "age"), all = TRUE),
-                      tot_pop_sum[, .(year, age, Pop = sum_estimate)],
-                            by = c("year", "age"), all = TRUE
+output_table <- merge(merge(householder_sum[, .(year, age, Gender = "Total", householders = sum_estimate)],
+                            hh_pop_sum[, .(year, age, Gender, HHpop = sum_estimate)],
+                                by = c("year", "Gender", "age"), all = TRUE),
+                      tot_pop_sum[, .(year, age, Gender, Pop = sum_estimate)],
+                            by = c("year", "Gender", "age"), all = TRUE
                         )
-output_table[is.na(householders), householders := 0]
+output_table[is.na(householders) & Gender == "Total", householders := 0]
 
 # re-write age groups as intervals
 assign_age_range(output_table)

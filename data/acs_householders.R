@@ -18,12 +18,13 @@ final_census <- merge(merge(
                 )
 final_census[, HHpop := Pop - GQ][, name := factor(gsub(" County, Washington", "", NAME), counties)][, NAME := NULL]
 final_census <- final_census[order(name)]
-fwrite(final_census, file = "census2020_hhpop.csv")
+fwrite(final_census, file = "census_hhpop.csv")
 
 # 5-year ACS
+acs.years <- c(2009, 2010, 2020, 2023)
 total_pop   <- get_acs_recs(geography="county",                         # Total population
                             table.names="B01003", 
-                            years=c(2020, 2023), 
+                            years=c(2010, 2020, 2023), 
                             acs.type="acs5")   %>% setDT() 
 
 hh   <- get_acs_recs(geography="county",                                # Households

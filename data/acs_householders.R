@@ -18,23 +18,23 @@ final_census <- merge(merge(
                 )
 final_census[, HHpop := Pop - GQ][, name := factor(gsub(" County, Washington", "", NAME), counties)][, NAME := NULL]
 final_census <- final_census[order(name)]
-fwrite(final_census, file = "census_hhpop.csv")
+fwrite(final_census, file = "census2020_hhpop.csv")
 
 # 5-year ACS
-acs.years <- c(2009, 2010, 2020, 2023)
+acs.years <- 2009:2023
 total_pop   <- get_acs_recs(geography="county",                         # Total population
                             table.names="B01003", 
-                            years=c(2010, 2020, 2023), 
+                            years=acs.years, 
                             acs.type="acs5")   %>% setDT() 
 
 hh   <- get_acs_recs(geography="county",                                # Households
                             table.names="B25003", 
-                            years=c(2020,2023), 
+                            years=acs.years, 
                             acs.type="acs5")   %>% setDT()
 
 hhpop <- get_acs_recs(geography="county",                                # Household population
                       table.names="B25008", 
-                      years=c(2020,2023), 
+                      years=acs.years, 
                       acs.type="acs5")   %>% setDT()
 
 # gq <- get_acs_recs(geography="county",                                # Group quarters
@@ -44,9 +44,9 @@ hhpop <- get_acs_recs(geography="county",                                # House
 
 final5 <- merge(merge(
                   total_pop[, .(year, name, Pop = estimate)],
-                  hh[label == "Estimate!!Total:", .(year, name, HH = estimate)], 
+                  hh[label %in% c("Estimate!!Total:", "Estimate!!Total"), .(year, name, HH = estimate)], 
                 by = c("year", "name")),
-                  hhpop[label == "Estimate!!Total:", .(year, name, HHpop = estimate)],
+                  hhpop[label  %in% c("Estimate!!Total:", "Estimate!!Total"), .(year, name, HHpop = estimate)],
                by = c("year", "name"))
 final5[, GQ := Pop - HHpop][, name := factor(gsub(" County", "", name), counties)]
 final5 <- final5[order(name)]

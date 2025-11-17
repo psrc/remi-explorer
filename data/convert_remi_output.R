@@ -11,7 +11,8 @@ scenario.list <- list(
     LUVit_emp_cnty = "Dashboard_Indicators_LUVitEmpSecCnty.xlsx",
     LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx",
-    higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx"
+    higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx",
+    "REMI v3.3" = "REMI_base_v33.xlsx"
 )
 # directory of the REMI excel files
 data.dir <- "~/T/2025Q1/Hana/REMI"
@@ -24,6 +25,10 @@ scenario.name <- "LUVit_emp_cnty_adj_mig"
 scenario.name <- "higher_amenity" 
 scenario.name <- "higher_amenity_low_productivity" 
 #scenario.name <- "REMI v3.2"
+scenario.name <- "REMI v3.3"
+
+output.file <- paste0("remi_scenario_", scenario.name, ".csv")
+output.file <- paste0("remi_v33.csv")
 
 remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
 
@@ -52,9 +57,9 @@ alldat <- NULL # this will hold all data
 # iterate over sheets
 for(sh in names(sheets)){
     # read the meta info from the first few rows of the sheet
-    remi.meta <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 1, n_max = 1))
+    remi.meta <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 2, n_max = 1)) # prior to v3.3 skip = 1
     # read the data in the sheet
-    remi.output <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 4))
+    remi.output <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 5)) # prior to v3.3 skip = 4
     # columns that we need and that are in the meta info and not in the main dataset
     extra.cols <- setdiff(colnames(remi.meta), c("Comparison Type", "Forecast"))
     # add those columns into the main dataset
@@ -160,4 +165,4 @@ alldatw <- dcast(alldat, Source + `Main Measure` + `Detailed Measure` + Region +
                  value.var = "value")
 
 # store into a file
-fwrite(alldatw, file = paste0("remi_scenario_", scenario.name, ".csv"))
+fwrite(alldatw, file = output.file)

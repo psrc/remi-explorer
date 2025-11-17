@@ -54,7 +54,7 @@ compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, target
     hhsize[hhsize[year == base.year], hhsize_ratio := hhsizemod / i.hhsizemod, on = "Region"]
 
     # get the base HH size
-    gq <- gqest[year == data.year]
+    gq <- gqest[year == base.year]
     setnames(gq, "name", "Region")
     gq[, hhsize := (Pop - GQ)/HH][Region != "Region", Region := paste(Region, "County")]
     # Step M

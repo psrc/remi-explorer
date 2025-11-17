@@ -12,6 +12,7 @@ install_psrc_fonts()
 alldata <- rbind(fread("data/ofm.csv", header = TRUE), 
                  fread("data/remi_v31.csv", header = TRUE), 
                  fread("data/remi_v32.csv", header = TRUE), 
+                 fread("data/remi_v33.csv", header = TRUE), 
                  fread("data/luvit.csv", header = TRUE), 
                  fread("data/ECO_Model_REF_2018.csv", header = TRUE),
                  fill = TRUE)

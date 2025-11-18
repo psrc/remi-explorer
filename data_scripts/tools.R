@@ -69,8 +69,8 @@ compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, acs.ye
     setnames(gq, "name", "Region")
     gq[, hhsize := (Pop - GQ)/HH][Region != "Region", Region := paste(Region, "County")] # actual HH size
     # Step M
-    hhsize[gq[year == data.year], hhsize := i.hhsize * hhsize_ratio, on = "Region"] # for future years
-    hhsize[gq[year < data.year], hhsize := i.hhsize, on = c("Region", "year")]
+    hhsize[gq[year == target.year], hhsize := i.hhsize * hhsize_ratio, on = "Region"] # for future years
+    hhsize[gq[year < target.year], hhsize := i.hhsize, on = c("Region", "year")]
     hhpopdt[hhsize, `:=`(value = value / i.hhsize, `Detailed Measure` = "Households"), on = c("Region", "year")]
     return(hhpopdt[year >= min(gq$year)])
 }

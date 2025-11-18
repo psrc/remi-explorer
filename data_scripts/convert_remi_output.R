@@ -6,17 +6,21 @@ source("tools.R")
 # list of scenario names (can be anything) and the corresponding Excel files 
 # containing REMI results, exported directly from REMI
 scenario.list <- list(
-    "REMI v3.2" = "Dashboard_Indicators_REMI3.2base.xlsx",
+    #"REMI v3.2" = "Dashboard_Indicators_REMI3.2base.xlsx",
+    "REMI v3.2" = c("REMI_base_v32.xlsx", "REMI_national_v32.xlsx"),
     LUVit_pop = "Dashboard_Indicators_LUVitPop.xlsx",
     LUVit_emp_cnty = "Dashboard_Indicators_LUVitEmpSecCnty.xlsx",
     LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx",
     higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx",
-    "REMI v3.3" = "REMI_base_v33.xlsx"
+    "REMI v3.3" = c("REMI_base_v33.xlsx", "REMI_national_v33.xlsx")
 )
 # directory of the REMI excel files
-data.dir <- "~/T/2025Q1/Hana/REMI"
-data.dir <- "."
+remi.dir <- "~/T/2025Q1/Hana/REMI"
+remi.dir <- "."
+
+# data directory of this repo
+data.dir <- "../data"
 
 # which scenario from the list above to process
 scenario.name <- "LUVit_pop"
@@ -27,10 +31,13 @@ scenario.name <- "higher_amenity_low_productivity"
 #scenario.name <- "REMI v3.2"
 scenario.name <- "REMI v3.3"
 
-output.file <- paste0("remi_scenario_", scenario.name, ".csv")
-output.file <- paste0("remi_v33.csv")
+#output.file <- file.path(data.dir, paste0("remi_scenario_", scenario.name, ".csv"))
+#output.file <- file.path(data.dir, paste0("remi_v32.csv"))
+output.file <- file.path(data.dir, paste0("remi_v33.csv"))
 
-remi.results.file <- file.path(data.dir, scenario.list[[scenario.name]])
+is.pre.v33 <- TRUE
+
+remi.results.files <- file.path(remi.dir, scenario.list[[scenario.name]])
 
 # names of the individual sheets that we want to include in the resulting dataset
 # and the corresponding value in the "Main Measure" column 
@@ -44,7 +51,16 @@ sheets <- list("Population by Age Group and Cou" = "Population",
                "GDP Profile" = "GDP",
                "Price Profile" = "Price",
                "Population By 5 Year Ages Race " = "Population",
-               "Employment by Sector and County" = "Employment"
+               "Employment by Sector and County" = "Employment",
+               "US Pop by PSEF Age Groups" = "Population",
+               "US Labor Force and LF Pop" = "Labor Force",
+               "US Components of Population Cha" = "Population",
+               "US Special Populations" = "Population",
+               "US GDP Profile" = "GDP",
+               "US Income Profile" = "Income",
+               "US Price Profile" = "Price",
+               "US Pop by 5yrAge Race Gender" = "Population",
+               "US Emp by PSEF Sector Retail w " = "Employment"
                )
 
 # for checking, see the names of all sheets in the file
@@ -56,10 +72,16 @@ id.vars <- c("Category", "Industry", "Region", "Race", "Age", "Gender", "Units")
 alldat <- NULL # this will hold all data
 # iterate over sheets
 for(sh in names(sheets)){
+    i <- which(sapply(remi.results.files, function(x) sh %in% excel_sheets(x)))
+    if(length(i) == 0) {
+        warning("Sheet ", sh, " not found.")
+        next
+    }
+    remi.results.file <- remi.results.files[i]
     # read the meta info from the first few rows of the sheet
-    remi.meta <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 2, n_max = 1)) # prior to v3.3 skip = 1
+    remi.meta <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = if(is.pre.v33) 1 else 2, n_max = 1)) # prior to v3.3 skip = 1
     # read the data in the sheet
-    remi.output <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = 5)) # prior to v3.3 skip = 4
+    remi.output <- data.table(read_xlsx(remi.results.file, sheet = sh, skip = if(is.pre.v33) 4 else 5)) # prior to v3.3 skip = 4
     # columns that we need and that are in the meta info and not in the main dataset
     extra.cols <- setdiff(colnames(remi.meta), c("Comparison Type", "Forecast"))
     # add those columns into the main dataset
@@ -88,7 +110,7 @@ for(sh in names(sheets)){
 }
 # process employment
 # read employment converter
-converter <- fread("employment_converter.csv")
+converter <- fread(file.path(data.dir, "employment_converter.csv"))
 converter[, mult := WAQB2022 * REF18fct] # apply TotEmp factors to 2022 W&S
 for(cnty in unique(converter$Region)) # fill in the "All Industries" rows
     converter[Region == cnty, mult := ifelse(Category == "All Sectors w Military", sum(mult), mult)]
@@ -129,6 +151,9 @@ alldat[`Detailed Measure` == "Population", `Detailed Measure` := "Total Populati
 # make Units consistent
 alldat[startsWith(Units, "Thousands"), Units := "Thousands"]
 
+# make year numeric
+alldat[, year := as.integer(year)]
+
 # fix Age, Race & Gender
 alldat[is.na(Age), Age := "All Ages"]
 alldat[is.na(Race), Race := "All Races"]
@@ -139,24 +164,28 @@ alldat <- alldat[!duplicated(alldat, by = c("Source", "Main Measure", "Detailed 
 
 acs.year <- 2023
 gqest <- NULL
+
 if(!"Household Population" %in% alldat[, `Detailed Measure`]){
     # derive HH pop
-    gqest <- fread("acs5_hhpop.csv")
+    gqest <- fread(file.path(data.dir, "acs5_hhpop.csv"))
     hhpop <- compute.hhpop(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" & 
-                           Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
+                           Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races" &
+                               Region != "Nation"],
                 gqest = gqest, yr = acs.year)
     alldat <- rbind(alldat, hhpop)
 }
 if(!"Households" %in% alldat[, `Detailed Measure`]){
     # commerce method for deriving households
-    acsdata <- fread("acs_hhpop_by_age.csv")[year == acs.year]
-    if(is.null(gqest)) fread("acs5_hhpop.csv")
+    acsdata <- fread(file.path(data.dir, "acs_hhpop_by_age.csv"))[year == acs.year]
+    if(is.null(gqest)) gqest <- fread(file.path(data.dir, "acs5_hhpop.csv"))
     hh <- compute.households(alldat[`Main Measure` == "Population" & `Detailed Measure` == "Total Population" &
-                                        Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages")],
-                             hhpopdt = alldat[`Main Measure` == "Population" & `Detailed Measure` == "Household Population" & 
-                                                Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races"],
+                                        Gender == "Total" & Race == "All Races" & !startsWith(Age, "All Ages") & 
+                                        Region != "Nation"],
+                             hhpopdt = alldat[`Main Measure` == "Households" & `Detailed Measure` == "Household Population" & 
+                                                Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races" &
+                                                  Region != "Nation"],
                              acs = acsdata, gqest = gqest, 
-                             base.year = acs.year, target.year = 2050)
+                             base.year = acs.year, acs.year = acs.year, target.year = 2050)
     alldat <- rbind(alldat, hh)
 }
 

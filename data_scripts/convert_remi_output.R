@@ -6,14 +6,14 @@ source("tools.R")
 # list of scenario names (can be anything) and the corresponding Excel files 
 # containing REMI results, exported directly from REMI
 scenario.list <- list(
-    #"REMI v3.2" = "Dashboard_Indicators_REMI3.2base.xlsx",
-    "REMI v3.2" = c("REMI_base_v32.xlsx", "REMI_national_v32.xlsx"),
+    "REMI v3.1" = c("DashboardIndicatorsCountyv31.xlsx", "DashboardNationalIndicatorsv31.xlsx"),
+    "REMI v3.2" = c("DashboardIndicatorsCountyv32.xlsx", "DashboardNationalIndicatorsv32.xlsx"),
+    "REMI v3.3" = c("DashboardIndicatorsCountyv33.xlsx", "DashboardNationalIndicatorsv33.xlsx"),
     LUVit_pop = "Dashboard_Indicators_LUVitPop.xlsx",
     LUVit_emp_cnty = "Dashboard_Indicators_LUVitEmpSecCnty.xlsx",
     LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx",
-    higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx",
-    "REMI v3.3" = c("REMI_base_v33.xlsx", "REMI_national_v33.xlsx")
+    higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx"
 )
 # directory of the REMI excel files
 remi.dir <- "~/T/2025Q1/Hana/REMI"
@@ -28,14 +28,18 @@ scenario.name <- "LUVit_emp_cnty"
 scenario.name <- "LUVit_emp_cnty_adj_mig"
 scenario.name <- "higher_amenity" 
 scenario.name <- "higher_amenity_low_productivity" 
+scenario.name <- "REMI v3.1"
 #scenario.name <- "REMI v3.2"
-scenario.name <- "REMI v3.3"
+#scenario.name <- "REMI v3.3"
 
-#output.file <- file.path(data.dir, paste0("remi_scenario_", scenario.name, ".csv"))
-#output.file <- file.path(data.dir, paste0("remi_v32.csv"))
-output.file <- file.path(data.dir, paste0("remi_v33.csv"))
+is.pre.v33 <- TRUE # is this version prior 3.3
 
-is.pre.v33 <- TRUE
+#output.file <- file.path(data.dir, paste0("remi_scenario_", scenario.name, ".csv")) # for scenarios
+output.file <- file.path(data.dir, 
+                         paste0(gsub(".", "", gsub(" ", "_", tolower(scenario.name)), 
+                              fixed = TRUE), ".csv")) # for REMI base data (e.g. REMI v3.3)
+
+
 
 remi.results.files <- file.path(remi.dir, scenario.list[[scenario.name]])
 
@@ -97,7 +101,8 @@ for(sh in names(sheets)){
         remil[startsWith(Category, "Const Res"), Category := "Const Res"]
         remil[startsWith(Category, "All Industries"), Category := "All Sectors w Military"]
         remil[startsWith(Category, "Retail"), Category := "Retail (No 722)"]
-        remiemp <- remil[as.integer(year) > 2021] # for later keep only current and projected years
+        if(!startsWith(sh, "US")) # do not do this for national data
+            remiemp <- remil[as.integer(year) > 2021] # for later keep only current and projected years
         # aggregate FIRE and Services
         remil[Category %in% c("FIRE", "Services"), value := sum(value), by = c("Region", "Units", "year")]
         remil <- remil[Category != "FIRE"][Category == "Services", Category := "FIRE and Services"]
@@ -185,7 +190,7 @@ if(!"Households" %in% alldat[, `Detailed Measure`]){
                                                 Gender == "Total" & startsWith(Age, "All Ages") & Race == "All Races" &
                                                   Region != "Nation"],
                              acs = acsdata, gqest = gqest, 
-                             base.year = acs.year, acs.year = acs.year, target.year = 2050)
+                             base.year = acs.year, acs.year = acs.year)
     alldat <- rbind(alldat, hh)
 }
 

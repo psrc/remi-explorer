@@ -190,7 +190,7 @@ navbarPage(
                             checkboxGroupInput('datasource_pyr',
                                                label = 'Source',
                                                choices = ordered.sources.for.pyr,
-                                               selected = ordered.sources.for.pyr[c(1, 3)]
+                                               selected = ordered.sources.for.pyr[c(1, 2, 3)]
                             )
                         ),
                         div(style = "width: 100%; float:left;",

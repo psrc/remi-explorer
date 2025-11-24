@@ -25,9 +25,10 @@ compute.hhpop <- function(dt, gqest, yr = 2020){
     return(dt)   
 }
 
-compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, acs.year = 2020, target.year = NULL){
+compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, acs.year = 2020#, target.year = NULL
+                               ){
     # implements Exhibit 19 from https://deptofcommerce.app.box.com/s/chqj8wk1esnnranyb3ewzgd4w0e5ve3a
-    if(is.null(target.year)) target.year <- max(as.integer(dt$year))
+    #if(is.null(target.year)) target.year <- max(as.integer(dt$year))
     # create a table of age groups that should be summed to the desired age categories
     agesdt <- unique(acs[year == acs.year, .(age)])
     agesdt <- cbind(agesdt, agesdt[, tstrsplit(age, "-")])
@@ -69,8 +70,8 @@ compute.households <- function(dt, hhpopdt, acs, gqest, base.year = 2020, acs.ye
     setnames(gq, "name", "Region")
     gq[, hhsize := (Pop - GQ)/HH][Region != "Region", Region := paste(Region, "County")] # actual HH size
     # Step M
-    hhsize[gq[year == target.year], hhsize := i.hhsize * hhsize_ratio, on = "Region"] # for future years
-    hhsize[gq[year < target.year], hhsize := i.hhsize, on = c("Region", "year")]
+    hhsize[gq[year == acs.year], hhsize := i.hhsize * hhsize_ratio, on = "Region"] # for future years
+    hhsize[gq[year < acs.year], hhsize := i.hhsize, on = c("Region", "year")]
     hhpopdt[hhsize, `:=`(value = value / i.hhsize, `Detailed Measure` = "Households"), on = c("Region", "year")]
     return(hhpopdt[year >= min(gq$year)])
 }

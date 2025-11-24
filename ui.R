@@ -190,7 +190,7 @@ navbarPage(
                             checkboxGroupInput('datasource_pyr',
                                                label = 'Source',
                                                choices = ordered.sources.for.pyr,
-                                               selected = ordered.sources.for.pyr[c(1, 2, 3)]
+                                               selected = ordered.sources.for.pyr[c(1, 2, 4)]
                             )
                         ),
                         div(style = "width: 100%; float:left;",
@@ -341,7 +341,7 @@ navbarPage(
                             checkboxGroupInput('datasource_scatter',
                                                label = 'Source',
                                                choices = ordered.sources,
-                                               selected = ordered.sources[c(1, 3:4)]
+                                               selected = ordered.sources[c(1, 2, 4)]
                             )
                          ), # end of source div
                         div(style = "width: 100%; float:left;",
@@ -481,7 +481,7 @@ navbarPage(
                               checkboxGroupInput('datasource_fct',
                                                  label = 'Source',
                                                  choices = ordered.sources,
-                                                 selected = ordered.sources[c(1, 3:4)]
+                                                 selected = ordered.sources[c(1, 2, 4)]
                               )
                           ), # end of source div
                           div(style = "width: 100%; float:left;",

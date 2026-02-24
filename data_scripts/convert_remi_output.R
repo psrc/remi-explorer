@@ -14,12 +14,15 @@ scenario.list <- list(
     LUVit_emp_cnty_adj_mig = "Dashboard_Indicators_LUVitEmpSecCntyAltMigSpeedAdj.xlsx",
     higher_amenity = "Dashboard_Indicators_higher_amenity.xlsx",
     higher_amenity_low_productivity = "Dashboard_Indicators_higher_amenity_low_productivity.xlsx",
-    "Zero_Intl_Migration" = c("DashboardIndicatorsCountyv33ZeroIntlMig.xlsx", "DashboardNationalIndicatorsv33ZeroIntlMig.xlsx")
+    "Zero_Intl_Migration" = c("DashboardIndicatorsCountyv33ZeroIntlMig.xlsx", "DashboardNationalIndicatorsv33ZeroIntlMig.xlsx"),
+    "OFM_v2022_Medium" = c("DashboardIndicatorsCountyOFM2022Medium.xlsx", "DashboardNationalIndicatorsOFM2022Medium.xlsx"),
+    "OFM_v2022_Low" = c("DashboardIndicatorsCountyOFM2022Low.xlsx", "DashboardNationalIndicatorsOFM2022Low.xlsx"),
+    "OFM_v2022_High" = c("DashboardIndicatorsCountyOFM2022High.xlsx", "DashboardNationalIndicatorsOFM2022High.xlsx")
 )
 # directory of the REMI excel files
 # remi.dir <- "~/T/2025Q1/Hana/REMI"
 remi.dir <- "J:/Projects/Forecasts/_Regional/2025/REMI/Dashboard_inputs"
-remi.dir <- "."
+#remi.dir <- "."
 
 # data directory of this repo
 data.dir <- "../data"
@@ -33,14 +36,17 @@ data.dir <- "../data"
 # scenario.name <- "REMI v3.1"
 # scenario.name <- "REMI v3.2"
 # scenario.name <- "REMI v3.3"
-scenario.name <- "Zero_Intl_Migration"
+# scenario.name <- "Zero_Intl_Migration"
+# scenario.name <- "OFM_v2022_Medium"
+scenario.name <- "OFM_v2022_Low"
+# scenario.name <- "OFM_v2022_High"
 
 is.pre.v33 <- FALSE # is this version prior 3.3
 
-#output.file <- file.path(data.dir, paste0("remi_scenario_", scenario.name, ".csv")) # for scenarios
-output.file <- file.path(data.dir, 
-                         paste0(gsub(".", "", gsub(" ", "_", tolower(scenario.name)), 
-                              fixed = TRUE), ".csv")) # for REMI base data (e.g. REMI v3.3)
+output.file <- file.path(data.dir, paste0("remi_scenario_", scenario.name, ".csv")) # for scenarios
+# output.file <- file.path(data.dir, 
+#                          paste0(gsub(".", "", gsub(" ", "_", tolower(scenario.name)), 
+#                               fixed = TRUE), ".csv")) # for REMI base data (e.g. REMI v3.3)
 
 
 

@@ -17,7 +17,8 @@ scenario.list <- list(
     "Zero_Intl_Migration" = c("DashboardIndicatorsCountyv33ZeroIntlMig.xlsx", "DashboardNationalIndicatorsv33ZeroIntlMig.xlsx"),
     "OFM_v2022_Medium" = c("DashboardIndicatorsCountyOFM2022Medium.xlsx", "DashboardNationalIndicatorsOFM2022Medium.xlsx"),
     "OFM_v2022_Low" = c("DashboardIndicatorsCountyOFM2022Low.xlsx", "DashboardNationalIndicatorsOFM2022Low.xlsx"),
-    "OFM_v2022_High" = c("DashboardIndicatorsCountyOFM2022High.xlsx", "DashboardNationalIndicatorsOFM2022High.xlsx")
+    "OFM_v2022_High" = c("DashboardIndicatorsCountyOFM2022High.xlsx", "DashboardNationalIndicatorsOFM2022High.xlsx"),
+    "Base_Adj_to_OFM" = c("DashboardIndicatorsCountyOFMBaseAdj.xlsx", "DashboardNationalIndicatorsOFMBaseAdj.xlsx")
 )
 # directory of the REMI excel files
 # remi.dir <- "~/T/2025Q1/Hana/REMI"
@@ -38,7 +39,7 @@ data.dir <- "../data"
 # scenario.name <- "REMI v3.3"
 # scenario.name <- "Zero_Intl_Migration"
 # scenario.name <- "OFM_v2022_Medium"
-scenario.name <- "OFM_v2022_Low"
+scenario.name <- "Base_Adj_to_OFM"
 # scenario.name <- "OFM_v2022_High"
 
 is.pre.v33 <- FALSE # is this version prior 3.3
